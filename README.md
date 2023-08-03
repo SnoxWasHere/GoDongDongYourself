@@ -24,6 +24,7 @@ You've probably never wanted to put yourself (or anyone else) into the cult clas
 
 ## Examples
 ![One row of an exported grid](/docs/examplegrid.png)
+![The scout from TF2 in DDND](/docs/examplecharacter.png)
 ## *Upcoming Features*
 - Sound effect replacement
 - Universal support for other 2D Fighter Maker games
