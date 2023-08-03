@@ -27,4 +27,5 @@ You've probably never wanted to put yourself (or anyone else) into the cult clas
 ## *Upcoming Features*
 - Sound effect replacement
 - Universal support for other 2D Fighter Maker games
+- Stage editing
 
