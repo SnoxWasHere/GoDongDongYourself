@@ -23,7 +23,7 @@ You've probably never wanted to put yourself (or anyone else) into the cult clas
 6. Replace the original .player file with the generated one in the game files
 
 ## Examples
-
+![One row of an exported grid](/docs/examplegrid.png)
 ## *Upcoming Features*
 - Sound effect replacement
 - Universal support for other 2D Fighter Maker games
