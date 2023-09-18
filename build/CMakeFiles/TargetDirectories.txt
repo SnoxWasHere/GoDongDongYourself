@@ -1,0 +1,3 @@
+D:/newDong/build/CMakeFiles/testproject2.dir
+D:/newDong/build/CMakeFiles/edit_cache.dir
+D:/newDong/build/CMakeFiles/rebuild_cache.dir
