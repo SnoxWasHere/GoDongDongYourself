@@ -20,7 +20,6 @@ private:
     util::Sound qqww;
 
     void extract(uint8_t* dst, uint8_t* src, uint32_t size, uint32_t newsize = 0, uint32_t pij = 0);
- 
 public:
     std::string fileName;
     std::string outputDir;

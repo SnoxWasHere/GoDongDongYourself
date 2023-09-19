@@ -19,9 +19,22 @@ void util::memset32(void* dest, uint32_t value, uintptr_t size)
     }  
 }
 
-void util::toChar(std::ofstream &file, uint8_t chars[], uint8_t size, uint32_t val)
+void util::toChar(std::ofstream &file, uint8_t size, uint32_t val)
 {
     //using little endian
+    char chars[size];
+    for (uint8_t i = 0; i < size; i++)
+    {
+        chars[i] = (val >> (8 * i)) & 0xFF;
+    }
+    
+    file.write(reinterpret_cast<const char*>(chars), size);
+}
+
+void util::toChar(std::fstream &file, uint8_t size, uint32_t val)
+{
+    //using little endian
+    char chars[size];
     for (uint8_t i = 0; i < size; i++)
     {
         chars[i] = (val >> (8 * i)) & 0xFF;

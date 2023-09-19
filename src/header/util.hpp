@@ -39,8 +39,17 @@ namespace util
         uint32_t size;
         uint16_t unk;
     };
+    struct iRen { //stores info from .ddi
+        uint16_t ofsa;
+        uint16_t ofsb;
+        uint16_t w;
+        uint16_t h;
+        uint16_t num;
+        uint32_t ofs;
+    };
     void memset32(void* dest, uint32_t value, uintptr_t size); //fills back-to-front with 32 bit int
-    void toChar(std::ofstream &file, uint8_t chars[], uint8_t size, uint32_t val); //32 bit int to 4 chars
+    void toChar(std::ofstream &file, uint8_t size, uint32_t val); //32 bit int to 4 chars
+    void toChar(std::fstream &file, uint8_t size, uint32_t val);
     void rawWrite(std::string name, uint16_t width, uint16_t height, uint8_t* start, util::BGRA* pallete); //writes .RGBA from .player
 }
 
