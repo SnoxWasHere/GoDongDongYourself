@@ -36,7 +36,8 @@ public:
         util::toChar(_file, 2, container.h);
     }
 
-    std::vector<util::iRen> read() override {
+    std::vector<util::iRen> read() override 
+    {
         std::vector<util::iRen> output;
 
         //switch this to fstream pls
@@ -72,6 +73,23 @@ public:
     
 };
 
-
+class DDGrid : public DDFile<util::mRen, util::mRen>
+{
+    DDGrid(std::string d, std::string n, int c) : DDFile(d, n, c) {}
+    void writeHeader(int count) override {
+        util::toChar(_file, 2, 0x60DD);
+        util::toChar(_file, 2, count);
+    }
+    void write(util::mRen &container) override {
+        _file.put(container.num);
+        _file.put(container.w);
+        _file.put(container.h);
+        _file.put(container.count);
+        for(auto img : container.imgs)
+        {
+            util::toChar(_file, 2, img);
+        }
+    }
+}
 
 #endif

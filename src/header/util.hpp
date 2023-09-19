@@ -47,6 +47,14 @@ namespace util
         uint16_t num;
         uint32_t ofs;
     };
+    struct mRen //stores info from .ddg
+    {
+        uint8_t num;
+        uint8_t w;
+        uint8_t h;
+        uint8_t count;
+        uint16_t imgs[16];
+    };
     void memset32(void* dest, uint32_t value, uintptr_t size); //fills back-to-front with 32 bit int
     void toChar(std::ofstream &file, uint8_t size, uint32_t val); //32 bit int to 4 chars
     void toChar(std::fstream &file, uint8_t size, uint32_t val);
