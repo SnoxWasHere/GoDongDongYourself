@@ -6,6 +6,7 @@
 #include <Windows.h>
 #include <filesystem>
 
+
 template <typename input, typename output> class DDFile
 {
 protected:
@@ -20,6 +21,8 @@ public:
     virtual std::vector<output> read() {}   //reads all
     ~DDFile() {_file.flush(); _file.close();}
 };
+
+
 
 class DDInfo : public DDFile<util::hRen, util::iRen>
 {
@@ -89,6 +92,43 @@ class DDGrid : public DDFile<util::mRen, util::mRen>
         {
             util::toChar(_file, 2, img);
         }
+    }
+    std::vector<util::mRen> read() {
+        OVERLAPPED ovr;
+        ovr.Offset = 0;
+        ovr.OffsetHigh = 0;
+        ovr.Internal = 0;
+        ovr.InternalHigh = 0;    
+
+        HANDLE fil = CreateFile((_dir + _name).c_str(), GENERIC_ALL, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
+
+
+        ovr.Offset += 2;
+        uint16_t num_grids = 0;
+        ReadFileEx(fil, &num_grids, 2, &ovr, nullptr);
+        ovr.Offset += 2;
+
+        for (uint16_t i = 0; i < num_grids; i++)
+        {
+            //header
+            util::mRen mts;
+            memset(&mts, 0, sizeof(mRen));
+            uint16_t inum = 0;
+
+            ReadFileEx(fil, &mts, 4, &ovr, nullptr);
+            ovr.Offset += 4;
+
+            //img numbers
+            for (uint8_t i = 0; i < mts->count; i++)
+            {
+                ReadFileEx(fil, &inum, 2, &ovr, nullptr);
+                ovr.Offset += 2;
+                mts->imgs[i] = inum;
+            }
+            
+            mlst.push_back(mts);
+        }
+        CloseHandle(fil);
     }
 }
 
