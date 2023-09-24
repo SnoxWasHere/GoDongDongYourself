@@ -19,32 +19,6 @@ void util::memset32(void* dest, uint32_t value, uintptr_t size)
     }  
 }
 
-void util::toChar(std::ofstream &file, uint8_t size, uint32_t val)
-{
-    //using little endian
-    char* chars = new char[size];
-    for (uint8_t i = 0; i < size; i++)
-    {
-        chars[i] = (val >> (8 * i)) & 0xFF;
-    }
-    
-    file.write(chars, size);
-    delete[] chars;
-}
-
-void util::toChar(std::fstream &file, uint8_t size, uint32_t val)
-{
-    //using little endian
-    char* chars = new char[size];
-    for (uint8_t i = 0; i < size; i++)
-    {
-        chars[i] = (val >> (8 * i)) & 0xFF;
-    }
-    
-    file.write(chars, size);
-    delete[] chars;
-}
-
 void util::rawWrite(std::string name, uint16_t width, uint16_t height, uint8_t* start, util::BGRA* pallete)
 {
     //uses RGBA imageMagick file format

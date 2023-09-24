@@ -56,8 +56,6 @@ namespace util
         uint16_t imgs[16];
     };
     void memset32(void* dest, uint32_t value, uintptr_t size); //fills back-to-front with 32 bit int
-    void toChar(std::ofstream &file, uint8_t size, uint32_t val); //32 bit int to 4 chars
-    void toChar(std::fstream &file, uint8_t size, uint32_t val);
     void rawWrite(std::string name, uint16_t width, uint16_t height, uint8_t* start, util::BGRA* pallete); //writes .RGBA from .player
 }
 

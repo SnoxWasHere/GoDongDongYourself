@@ -114,12 +114,14 @@ public:
     ~DDFile() {_file.flush(); _file.close(); std::cout<<"f";}
 };
 
+
+
 class DDGrid : public DDFile<util::mRen, util::mRen>
 {
 protected:
+    const uint16_t mWord = 0x0DD;
     void writeHeader(int count) override {
-        std::cout << _file.is_open();
-        util::toChar(_file, 2, 0x60DD);
+        _file.write(reinterpret_cast<const char*>(&mWord), 2);
         util::toChar(_file, 2, count);
     }
 public:
@@ -132,7 +134,7 @@ public:
         _file.put(container.count);
         for(auto img : container.imgs)
         {
-            util::toChar(_file, 2, img);
+            _file.write(reinterpret_cast<char*>(&img), 2);
         }
     }
     std::vector<util::mRen> read() {
@@ -173,10 +175,6 @@ int main()
     gridfile->write(ren2);
     delete gridfile;
 
-    gridfile = new DDGrid(".\\", "dave.ddg");
-    
-    std::vector<util::mRen> readVals = gridfile->read();
-    std::cout << std::to_string(readVals[1].imgs[4]) << std::endl;
 
     return 0;
 }
