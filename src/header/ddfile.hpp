@@ -94,6 +94,7 @@ class DDGrid : public DDFile<util::mRen, util::mRen>
         }
     }
     std::vector<util::mRen> read() {
+        std::vector<util::mRen> output;
         OVERLAPPED ovr;
         ovr.Offset = 0;
         ovr.OffsetHigh = 0;
@@ -112,24 +113,24 @@ class DDGrid : public DDFile<util::mRen, util::mRen>
         {
             //header
             util::mRen mts;
-            memset(&mts, 0, sizeof(mRen));
+            memset(&mts, 0, sizeof(util::mRen));
             uint16_t inum = 0;
 
             ReadFileEx(fil, &mts, 4, &ovr, nullptr);
             ovr.Offset += 4;
 
             //img numbers
-            for (uint8_t i = 0; i < mts->count; i++)
+            for (uint8_t i = 0; i < mts.count; i++)
             {
                 ReadFileEx(fil, &inum, 2, &ovr, nullptr);
                 ovr.Offset += 2;
-                mts->imgs[i] = inum;
+                mts.imgs[i] = inum;
             }
             
-            mlst.push_back(mts);
+            output.push_back(mts);
         }
         CloseHandle(fil);
     }
-}
+};
 
 #endif
