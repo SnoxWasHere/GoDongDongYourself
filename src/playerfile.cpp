@@ -149,137 +149,102 @@ void PlayerFile::extract(uint8_t* dst, uint8_t* src, uint32_t size, uint32_t new
 PlayerFile::PlayerFile(std::string file)
 {
     util::Status status("Opening file");
-    fileName = file;
+    this->fileName = file;
     std::string fileDir = "./";
-    _ovr.Offset = 0;
-    _ovr.OffsetHigh = 0;
-    _ovr.Internal = 0;
-    _ovr.InternalHigh = 0;
-    _playerFile = CreateFile((fileDir + fileName + ".player").c_str(), 
-                            GENERIC_ALL, 
-                            FILE_SHARE_READ, 
-                            nullptr, 
-                            OPEN_EXISTING, 
-                            FILE_ATTRIBUTE_NORMAL, 
-                            nullptr);
-    if(_playerFile == INVALID_HANDLE_VALUE) //error usually caused by lack of admin access
+
+    _playerFile.open(fileDir + fileName + ".player", std::ios::binary);
+
+    if(!_playerFile.is_open()) //error probably won't happen anymore
     {
-        DWORD errorCode = GetLastError();
-        std::cerr << "Error opening file - " << errorCode << endl;
-        if (errorCode == ERROR_ACCESS_DENIED) {
-            cout << "Access denied. Check file permissions or run as administrator." << endl;
-        }
-        CloseHandle(_playerFile);
+        std::cerr << "Error opening file" << endl;
         system("pause >nul");
-        exit(errorCode);
+        exit(1);
     }
 }
 void PlayerFile::readHeader()
 {
     util::Status status("Reading header");
     //file magic word 2DKGT2K/2DKGT2G
-    _ovr.Offset += 0x10;
-
+    _playerFile.seekg(0x10);
     //internal char name
-    ReadFileEx(_playerFile, &charName, 0x100, &_ovr, nullptr);
-    _ovr.Offset += 0x100;
+    _playerFile.read(charptr(&charName), 0x100);
 
     //num of moves
     uint32_t numMoves = 0;
-    ReadFileEx(_playerFile, &numMoves, 4, &_ovr, nullptr);
-    _ovr.Offset += 4;
-
-    _ovr.Offset += numMoves * 0x27;
+    _playerFile.read(charptr(&numMoves), 4);
+    //skip over move data
+    _playerFile.seekg((numMoves * 0x27), std::ios::cur);
 
     uint32_t choNum = 0;
-    ReadFileEx(_playerFile, &choNum, 4, &_ovr, nullptr);
-    _ovr.Offset += 4;
-
-    _ovr.Offset += (choNum << 4);
+    _playerFile.read(charptr(&choNum), 4);
+    _playerFile.seekg((choNum << 4), std::ios::cur);
     
-    ReadFileEx(_playerFile, &headerCount, 4, &_ovr, nullptr);
-    _ovr.Offset += 4;
+    _playerFile.read(charptr(&headerCount), 4);
 }
 void PlayerFile::createDir()
 {
     util::Status status("Creating directories");
-    outputDir = "./";
-    outputDir += fileName;
+    this->outputDir = "./";
+    this->outputDir += fileName;
     std::filesystem::create_directories(outputDir);
     
-    outputDir += "/";
+    this->outputDir += "/";
     std::filesystem::create_directories(outputDir + "snd");
     std::filesystem::create_directories(outputDir + "main");
     std::filesystem::create_directories(outputDir + "unchanged");
 }
-void PlayerFile::readImages()
+void PlayerFile::readImages() 
 {
+    //the scary part of the program
     util::Status status("Reading images");
     uint8_t* unpkd;
     uint8_t* pkd;
     uint32_t new_size = 0;
     for (uint32_t ij = 0; ij < headerCount; ij++)
     {
-        zps = new util::hRen;
-        memset(reinterpret_cast<void*>(zps), 0, sizeof(util::hRen));
-
+        util::hRen zps = {0};
         bool est = false;
-        //fills zps
-        ReadFileEx(_playerFile, reinterpret_cast<char*>(zps), 0x14, &_ovr, nullptr);
-        zps->ofs = _ovr.Offset;
 
-        _ovr.Offset += 0x14;
-            
-        if(zps->size != 0) //compressed
+        _playerFile.read(charptr(&zps), 0x14);
+        zps.ofs = (int)_playerFile.tellg() - 0x14;
+        
+        //TODO - make these if statements not bad
+        if(zps.size != 0) //compressed
         {
-            pkd = new uint8_t[zps->size];
-            memset(pkd, 0, zps->size);
+            pkd = new uint8_t[zps.size];
+            memset(pkd, 0, zps.size);
             
-            if(zps->pal == 1) //create space for palette
-            {
-                new_size = zps->w * zps->h + 0x400;
-            } 
-            else
-            {
-                new_size = zps->w * zps->h;
-            }
+            new_size = zps.w * zps.h;
+            //create space for palette
+            if(zps.pal == 1) {new_size += 0x400;} 
             
             unpkd = new uint8_t[new_size];
+            //more on beefiness later
             util::memset32(unpkd, BEEFVAL, new_size);
-            ReadFileEx(_playerFile, pkd, zps->size, &_ovr, nullptr);
-            // cout << zps->size << endl; 
-            // cout << new_size << endl; 
-            _ovr.Offset += zps->size;
-            extract(unpkd, pkd, zps->size, new_size, ij);
+            _playerFile.read(charptr(pkd), zps.size);
+
+            extract(unpkd, pkd, zps.size, new_size, ij); //decompress from pkd to unpkd
             delete[] pkd;
             est = true;
         }
-        else if (zps->w != 0 && zps->h != 0) //uncompressed but not blank
+        else if (zps.w != 0 && zps.h != 0) //uncompressed but not blank
         {
-            if(zps->pal == 1)
-            {
-                new_size = zps->w * zps->h + 0x400;
-            } 
-            else
-            {
-                new_size = zps->w * zps->h;
-            }
-            unpkd = new uint8_t[new_size+0x10];
-            ReadFileEx(_playerFile, unpkd, new_size, &_ovr, nullptr);
-            _ovr.Offset += new_size;
+            new_size = zps.w * zps.h;
+            //create space for palette
+            if(zps.pal == 1) {new_size += 0x400;} 
+            
+            //removed the +0x10, if this breaks put it back, also added beefcheck
+            unpkd = new uint8_t[new_size];
+            util::memset32(unpkd, BEEFVAL, new_size);
+            _playerFile.read(charptr(unpkd), new_size);
 
             est = true;
         }
         if(est)
         {
-            zps->unk = (unpkd);
-            zps->size = new_size;
+            zps.unk = (unpkd);
+            zps.size = new_size;
             slst.push_back(zps);
-            // cout << slst.size() << endl;
-        }
-        else  //if blank
-        {
-            delete zps;
         }
     }
 }
@@ -287,39 +252,33 @@ void PlayerFile::readPallettes()
 {
     util::Status status("Extracting pallettes");
     mempal = new uint8_t[0x2100]; //8 palletes
-    ReadFileEx(_playerFile, mempal, 0x2100, &_ovr, nullptr);
-    _ovr.Offset += 0x2100;
+    memset(mempal, 0, 0x2100); 
+    _playerFile.read(charptr(mempal), 0x2100);
 }
 void PlayerFile::createSounds()
 {
     uint32_t snd_n;
-    ReadFileEx(_playerFile, &snd_n, 4, &_ovr, nullptr);
+    _playerFile.read(charptr(&snd_n), 4);
     util::Status status("Creating sounds", snd_n);
-    _ovr.Offset += 4;
+
     for (uint32_t ij = 0; ij < snd_n; ij++)
     {
         //sounds are stored as uncompressed .wavs
         memset(&qqww, 0, 0x2A);
-        ReadFileEx(_playerFile, &qqww, 0x2A, &_ovr, nullptr);
-        _ovr.Offset += 0x2A;
+        _playerFile.read(charptr(&qqww), 0x2A);
 
         if(qqww.size != 0)
         {
+            //TODO - DDS file
             uint8_t* snd_m = new uint8_t[qqww.size];
-            ReadFileEx(_playerFile, snd_m, qqww.size, &_ovr, nullptr);
-            _ovr.Offset += qqww.size;
-
-            OVERLAPPED ovr2;
-            ovr2.Offset = 0;
-            ovr2.OffsetHigh = 0;
-            ovr2.Internal = 0;
-            ovr2.InternalHigh = 0;
+            _playerFile.read(charptr(snd_m), qqww.size);
 
             std::string str = outputDir + std::string("snd/") + std::to_string(ij) + std::string(".wav");
 
-            HANDLE fil2 = CreateFile(str.c_str(), GENERIC_ALL, FILE_SHARE_READ || FILE_SHARE_WRITE, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-            WriteFileEx(fil2, snd_m, qqww.size, &ovr2, nullptr);
-            CloseHandle(fil2);
+            std::ofstream fil2(str, std::ios::binary);
+            //test me!
+            fil2.write(charptr(snd_m), qqww.size);
+            fil2.close();
             delete[] snd_m;
             
         }
@@ -347,19 +306,19 @@ void PlayerFile::createImages()
 
     for (uint32_t ij = 0; ij < slst.size(); ij++)
     {
-        zps = slst[ij];
+        util::hRen zps = slst[ij];
 
-        if (zps->pal == 1) //if image contains it's own palette
+        if (zps.pal == 1) //if image contains it's own palette
         {
-            tmppal = reinterpret_cast<util::BGRA*>(zps->unk);
+            tmppal = reinterpret_cast<util::BGRA*>(zps.unk);
             
-            imgStart = (zps->unk + 0x400);
+            imgStart = (zps.unk + 0x400);
 
             //some images only have a 512 byte palette before the image begins as opposed to the presumed 1024
             //this doesn't cause issues upon reading because of how size is stored within the header
             //however this 512 vs 1024 information is located at an unknown location
             //so we check for 512 bytes of a poison value (0xBEEFFACE) at the end of image to determine it
-            uint32_t* bigunk = reinterpret_cast<uint32_t*>(zps->unk + (zps->h * zps->w) + 0x200); //start + 1 byte per pixel + 512
+            uint32_t* bigunk = reinterpret_cast<uint32_t*>(zps.unk + (zps.h * zps.w) + 0x200); //start + 1 byte per pixel + 512
             if (*bigunk == BEEFVAL) 
             {
                 beefedup = true;
@@ -369,14 +328,14 @@ void PlayerFile::createImages()
                     if (*(bigunk + i) != BEEFVAL) {beefedup = false;}
                 }
                 //poison value is written back to front so this will always align
-                if (*(zps->unk + 0x200) != 0xCE)  {beefedup = false;}
+                if (*(zps.unk + 0x200) != 0xCE)  {beefedup = false;}
 
-                if (beefedup) {imgStart = (zps->unk + 0x200);} //otherwise 0x400
+                if (beefedup) {imgStart = (zps.unk + 0x200);} //otherwise 0x400
             }
             //creates img
-            util::rawWrite(std::to_string(ij), zps->w, zps->h, imgStart, tmppal);
+            util::rawWrite(std::to_string(ij), zps.w, zps.h, imgStart, tmppal);
             //writes all necessary zps information to .ddi
-            ddi.write(*zps); 
+            ddi.write(zps); 
         }
         else //image uses global palette
         {
@@ -385,8 +344,8 @@ void PlayerFile::createImages()
             for (int pk = 0; pk < 7; pk++)
             {
                 tmppal = pallt[pk];
-                imgStart = zps->unk;
-                util::rawWrite(std::to_string(pk) + "p" + std::to_string(ij), zps->w, zps->h, imgStart, tmppal);
+                imgStart = zps.unk;
+                util::rawWrite(std::to_string(pk) + "p" + std::to_string(ij), zps.w, zps.h, imgStart, tmppal);
             }
         }
         status.update(ij + 1);
@@ -396,6 +355,6 @@ void PlayerFile::createImages()
 
 PlayerFile::~PlayerFile()
 {
-    CloseHandle(_playerFile);
+    this->closePlayerFile();
 }
 

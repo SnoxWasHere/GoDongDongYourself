@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <fstream>
 #include <iostream>
+#define charptr(x) reinterpret_cast<char*>(x)
 
 namespace util
 {

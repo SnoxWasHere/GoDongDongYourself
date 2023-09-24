@@ -6,12 +6,11 @@
 #include <Windows.h>
 #include <filesystem>
 
-#define charptr(x) reinterpret_cast<char*>(x)
+
 
 template <typename input, typename output> class DDFile
 {
 protected:
-    const uint16_t mWord;
     std::string _dir;
     std::string _name;
     std::fstream _file;

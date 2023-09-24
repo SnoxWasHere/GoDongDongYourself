@@ -11,11 +11,10 @@
 class PlayerFile
 {
 private:
-    OVERLAPPED _ovr;
-    HANDLE _playerFile;
+    std::ifstream _playerFile;
 
-    util::hRen* zps;
-    std::vector<util::hRen*> slst;
+    //util::hRen* zps;
+    std::vector<util::hRen> slst;
     uint8_t* mempal;
     util::Sound qqww;
 
@@ -32,7 +31,7 @@ public:
     void readImages();
     void readPallettes();
     void createSounds();
-    inline void closePlayerFile() {CloseHandle(_playerFile);}
+    inline void closePlayerFile() {_playerFile.close();}
     void createImages();
     ~PlayerFile();
 };
