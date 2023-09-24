@@ -29,7 +29,7 @@ void util::toChar(std::ofstream &file, uint8_t size, uint32_t val)
     }
     
     file.write(chars, size);
-    delete chars;
+    delete[] chars;
 }
 
 void util::toChar(std::fstream &file, uint8_t size, uint32_t val)
@@ -42,13 +42,12 @@ void util::toChar(std::fstream &file, uint8_t size, uint32_t val)
     }
     
     file.write(chars, size);
-    delete chars;
+    delete[] chars;
 }
 
 void util::rawWrite(std::string name, uint16_t width, uint16_t height, uint8_t* start, util::BGRA* pallete)
 {
     //uses RGBA imageMagick file format
-    //TODO - smart pointer implementation
     RawImage* image = new RawImage(name, width, height);
     uint8_t pbt;
     for (uint32_t j = 0; j < height; j++)

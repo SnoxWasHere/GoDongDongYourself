@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <iostream>
 #include "header\playerfile.hpp"
+#include "header\ddfile.hpp"
 
 using std::cout;
 using std::endl;
@@ -334,17 +335,13 @@ void PlayerFile::createImages()
     {
         pallt[ij] = reinterpret_cast<util::BGRA*>(mempal + ij * 0x420);
     }
-    uint8_t nibble[4];
-    uint8_t bytes[2];
+
     //creating DongDongImage file
     //stores information about each image to be referenced later
-    std::ofstream ddi (outputDir + "full.ddi", std::ios::binary);
-    util::toChar(ddi, nibble, 4, 0x000010DD);
-    util::toChar(ddi, bytes, 2, slst.size());
-    ddi.flush();
+    DDInfo ddi(outputDir, "full.ddi", slst.size());
 
     bool beefedup;
-    uint8_t* filp;
+    uint8_t* imgStart;
     util::BGRA* tmppal;
     RawImage::setDir("./KEN/main/");
 
@@ -355,50 +352,31 @@ void PlayerFile::createImages()
         if (zps->pal == 1) //if image contains it's own palette
         {
             tmppal = reinterpret_cast<util::BGRA*>(zps->unk);
+            
+            imgStart = (zps->unk + 0x400);
 
             //some images only have a 512 byte palette before the image begins as opposed to the presumed 1024
             //this doesn't cause issues upon reading because of how size is stored within the header
-            //however this 512 vs 1024 information is located at an unknown location earlier in the file
-            //and so we check for 512 bytes of a poison value (0xBEEFFACE) at the end of image to determine it
-            uint32_t* bigunk = reinterpret_cast<uint32_t*>(zps->unk + (zps->h * zps->w) + 0x200);
+            //however this 512 vs 1024 information is located at an unknown location
+            //so we check for 512 bytes of a poison value (0xBEEFFACE) at the end of image to determine it
+            uint32_t* bigunk = reinterpret_cast<uint32_t*>(zps->unk + (zps->h * zps->w) + 0x200); //start + 1 byte per pixel + 512
             if (*bigunk == BEEFVAL) 
             {
                 beefedup = true;
+                //checking for false positives (might be excessive)
                 for (int i = 1; i < ((0x200 / 4) - 2) ; i++)
                 {
-                    if (*(bigunk + i) != BEEFVAL)
-                    {
-                        beefedup = false;
-                    }
+                    if (*(bigunk + i) != BEEFVAL) {beefedup = false;}
                 }
-                if (*(zps->unk + 0x200) != 0xCE) //poison value is written back to front so this will always align
-                {
-                    beefedup = false;
-                }
-                if (beefedup)
-                {
-                    filp = (zps->unk + 0x200);
-                    //cout << "so beefy!";
-                }
-                else
-                {
-                    filp = (zps->unk + 0x400);
-                } 
-            }
-            else
-            {
-                filp = (zps->unk + 0x400);
-            }
-            
-            
-            util::rawWrite(std::to_string(ij), zps->w, zps->h, filp, tmppal);
+                //poison value is written back to front so this will always align
+                if (*(zps->unk + 0x200) != 0xCE)  {beefedup = false;}
 
+                if (beefedup) {imgStart = (zps->unk + 0x200);} //otherwise 0x400
+            }
+            //creates img
+            util::rawWrite(std::to_string(ij), zps->w, zps->h, imgStart, tmppal);
             //writes all necessary zps information to .ddi
-            util::toChar(ddi, bytes, 2, ij);
-            util::toChar(ddi, nibble, 4, zps->ofs);
-            util::toChar(ddi, bytes, 2, zps->w);
-            util::toChar(ddi, bytes, 2, zps->h);
-            ddi.flush();
+            ddi.write(*zps); 
         }
         else //image uses global palette
         {
@@ -407,13 +385,12 @@ void PlayerFile::createImages()
             for (int pk = 0; pk < 7; pk++)
             {
                 tmppal = pallt[pk];
-                filp = zps->unk;
-                util::rawWrite(std::to_string(pk) + "p" + std::to_string(ij), zps->w, zps->h, filp, tmppal);
+                imgStart = zps->unk;
+                util::rawWrite(std::to_string(pk) + "p" + std::to_string(ij), zps->w, zps->h, imgStart, tmppal);
             }
         }
         status.update(ij + 1);
     }
-    ddi.close();
 }
 
 
