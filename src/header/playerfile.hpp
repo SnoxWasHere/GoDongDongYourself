@@ -13,7 +13,6 @@ class PlayerFile
 private:
     std::ifstream _playerFile;
 
-    //util::hRen* zps;
     std::vector<util::hRen> slst;
     uint8_t* mempal;
     util::Sound qqww;

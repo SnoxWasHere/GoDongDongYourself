@@ -35,9 +35,9 @@ protected:
         _file.write(charptr(&count), 2);
     }
 public:
-    //input
+    //read
     DDInfo(std::string d, std::string n) :        DDFile(d, n) {_file.open(_dir + _name, std::ios::in  | std::ios::binary);}
-    //output
+    //write
     DDInfo(std::string d, std::string n, int c) : DDFile(d, n) {_file.open(_dir + _name, std::ios::out | std::ios::binary); writeHeader(c);}
 
     void write(util::hRen &container) override {
@@ -84,9 +84,9 @@ void writeHeader(int count) override {
         _file.write(charptr(&count), 2);
     }
 public:
-    //input
+    //read
     DDGrid(std::string d, std::string n) :        DDFile(d, n) {_file.open(_dir + _name, std::ios::in  | std::ios::binary);}
-    //output
+    //write
     DDGrid(std::string d, std::string n, int c) : DDFile(d, n) {_file.open(_dir + _name, std::ios::out | std::ios::binary); writeHeader(c);}
     void write(util::mRen &container) override {
         _file.put(container.num);
