@@ -28,10 +28,10 @@ struct gridStrings
 
     void makeImages(const std::string &dir, const unsigned num){
         std::string tileInfo = " -gravity NorthWest -geometry " + std::string("\"") + std::to_string(bW) + std::string("x") + std::to_string(bH) + "+0+0<>\" -tile 4x -background none " + dir + std::to_string(num);
-        system((std::string("montage ") + graphics     + tileInfo + "g.png" ).c_str());
-        system((std::string("montage ") + tmplGraphics + tileInfo + "gt.png").c_str());
+        system((std::string("magick montage ") + graphics     + tileInfo + "g.png" ).c_str());
+        system((std::string("magick montage ") + tmplGraphics + tileInfo + "gt.png").c_str());
         //overlay captions on top
-        system((std::string("convert ") + dir + std::to_string(num) + std::string("gt.png -pointsize 14 ") + bigCap + " -pointsize 10 " + smallCap + dir + std::to_string(num) + std::string("gt.png")).c_str());
+        system((std::string("magick convert ") + dir + std::to_string(num) + std::string("gt.png -pointsize 14 ") + bigCap + " -pointsize 10 " + smallCap + dir + std::to_string(num) + std::string("gt.png")).c_str());
     }
 
 };
