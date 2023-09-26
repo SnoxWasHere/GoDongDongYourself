@@ -25,12 +25,6 @@ void partTwo(string pfile)
 
     //open ddi
     DDInfo ddi(wDir, "full.ddi");
-
-    //create directory
-    fs::create_directories(wDir + string("grids"));
-    string gDir = wDir + "grids/";
-    wDir += "main/";
-
     //read ddi to vector dlst
     vector<util::iRen> dlst = ddi.read();
 
@@ -39,8 +33,12 @@ void partTwo(string pfile)
     //round up from 16
     uint16_t maxGrids = imgNum / 16;
     if(imgNum % 16 != 0) {maxGrids++;}
-
     DDGrid ddg(wDir, "full.ddg", maxGrids);
+
+    //create directories
+    fs::create_directories(wDir + string("grids"));
+    string gDir = wDir + "grids/";
+    wDir += "main/";
 
     //begin loop
     unsigned gridNum = 0;
@@ -56,6 +54,7 @@ void partTwo(string pfile)
 
             uint16_t cImgs[16] = {0}; 
             for (int idx = 0; const auto &img : cgrid) {
+                //creating list of imgs & shapes
                 magickText.writeGraphics(wDir, img.num);
                 magickText.writeTemplate(img.w, img.h);
                 //checks to see which image is the biggest
@@ -74,7 +73,8 @@ void partTwo(string pfile)
             
             gridStrings::bW = bigW;
             gridStrings::bH = bigH;
-            for (uint8_t ix = 0, iy = 0; const auto &img : cgrid) { //have to loop second time because first time determined grid cell size
+            for (uint8_t ix = 0, iy = 0; const auto &img : cgrid) { 
+                //have to loop second time because first time determined grid cell size
                 magickText.writeCaptions(ix, iy, img);
                 if (ix == 3) {ix = 0; iy++;}
                 else         {ix++;}
