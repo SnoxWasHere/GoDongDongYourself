@@ -21,6 +21,7 @@ void partOne(string pfile)
 
 void partTwo(string pfile)
 {
+    util::Status* status = new util::Status("Opening files");
     string wDir = string("./") + pfile + "/";
 
     //open ddi
@@ -34,12 +35,16 @@ void partTwo(string pfile)
     uint16_t maxGrids = imgNum / 16;
     if(imgNum % 16 != 0) {maxGrids++;}
     DDGrid ddg(wDir, "full.ddg", maxGrids);
+    delete status;
 
+    status = new util::Status("Creating directories");
     //create directories
     fs::create_directories(wDir + string("grids"));
     string gDir = wDir + "grids/";
     wDir += "main/";
-
+    delete status;
+    
+    status = new util::Status("Creating grids", maxGrids);
     //begin loop
     unsigned gridNum = 0;
     vector<util::iRen> cgrid;
@@ -82,10 +87,12 @@ void partTwo(string pfile)
             //create image grid and template grid
             magickText.makeImages(gDir, gridNum);
             gridNum++;
+            status->update(gridNum);
             cgrid.clear();
             ddg.flush();
         }
     }
+    delete status;
 }
 
 int main()
