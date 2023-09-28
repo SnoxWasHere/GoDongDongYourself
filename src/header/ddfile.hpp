@@ -121,4 +121,37 @@ public:
     }
 };
 
+class DDSound : public DDFile<uint32_t, uint32_t>
+{
+protected:
+    void writeHeader(int count) override {
+            const uint16_t mWord = 0x50DD;
+            _file.write(reinterpret_cast<const char*>(&mWord), 2);
+            _file.write(charptr(&count), 2);
+    }
+public:
+    //read
+    DDSound(std::string d, std::string n) :        DDFile(d, n) {_file.open(_dir + _name, std::ios::in  | std::ios::binary);}
+    //write
+    DDSound(std::string d, std::string n, int c) : DDFile(d, n) {_file.open(_dir + _name, std::ios::out | std::ios::binary); writeHeader(c);}
+    void write(uint32_t size) override {
+        _file.write(charptr(size), 4);
+    }
+    std::vector<uint32_t> read() {
+        std::vector<uint32_t> output;
+        _file.seekg(2); //magic word
+        uint16_t numSounds = 0;
+        _file.read(charptr(&numSounds), 2);
+        
+        for (uint16_t i = 0; i < numSounds; i++) {
+            uint32_t sSize;
+            memset(&sSize, 0, 4);
+            _file.read(charptr(&sSize), 4);
+
+            output.push_back(sSize);
+        }
+        return output;
+    }
+};
+
 #endif

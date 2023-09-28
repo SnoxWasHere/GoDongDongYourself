@@ -10,6 +10,7 @@ using std::endl;
 void PlayerFile::extract(uint8_t* dst, uint8_t* src, uint32_t size, uint32_t newsize, uint32_t pij)
 {
     //Extracts RLE encoded images
+    //don't try to edit this unless you want to go insane
     uint32_t pos = 0;
     uint32_t pos2 = 0;
     uint32_t tmp = 0;
@@ -156,7 +157,7 @@ PlayerFile::PlayerFile(std::string file)
 
     if(!_playerFile.is_open()) //error probably won't happen anymore
     {
-        std::cerr << "Error opening file" << endl;
+        std::cerr << "Error opening file!" << endl;
         system("pause >nul");
         exit(1);
     }
@@ -260,13 +261,14 @@ void PlayerFile::createSounds()
     uint32_t snd_n;
     _playerFile.read(charptr(&snd_n), 4);
     util::Status status("Creating sounds", snd_n);
+    DDSound* dds = new DDSound(outputDir + "snd/", "full.dds", snd_n);
 
     for (uint32_t ij = 0; ij < snd_n; ij++)
     {
         //sounds are stored as uncompressed .wavs
         memset(&qqww, 0, 0x2A);
         _playerFile.read(charptr(&qqww), 0x2A);
-
+        dds.write(qqww.size);
         if(qqww.size != 0)
         {
             //TODO - DDS file
@@ -284,6 +286,7 @@ void PlayerFile::createSounds()
         }
         status.update(ij + 1);
     }
+    delete dds;
 }
 void PlayerFile::createImages()
 {
