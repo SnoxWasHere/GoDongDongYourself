@@ -268,7 +268,7 @@ void PlayerFile::createSounds()
         //sounds are stored as uncompressed .wavs
         memset(&qqww, 0, 0x2A);
         _playerFile.read(charptr(&qqww), 0x2A);
-        dds.write(qqww.size);
+        dds->write(qqww.size);
         if(qqww.size != 0)
         {
             //TODO - DDS file
