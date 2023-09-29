@@ -18,7 +18,6 @@ void partOne(string pfile)
 }
 
 
-
 void partTwo(string pfile)
 {
     util::Status* status = new util::Status("Opening files");
