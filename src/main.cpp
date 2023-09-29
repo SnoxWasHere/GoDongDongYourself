@@ -106,7 +106,7 @@ int main()
     << endl << "* v2.0 - snox - 08/2023 " << endl << endl;
     cout << "Enter character name without file extension (case sensitive): "; cin >> pfileName;
     unsigned modeNum;
-    MODE:
+    MODE: //go back if given an invalid input
     cout << "Select mode: "; cin >> modeNum; cout << endl;
     switch (modeNum)
     {
@@ -128,7 +128,6 @@ int main()
         break;
     }
     
-    partTwo(pfileName);
     cout << endl << "Press any key to close." << endl;
     system("pause >nul");
     return 0;
