@@ -95,12 +95,39 @@ void partTwo(string pfile)
     delete status;
 }
 
+void partThree(string pfile) {}
+void partFour(string pfile) {}
+
+
 int main()
 {
     string pfileName;
     cout << "    ______         ____                       ____                   "  << endl <<  "   / ____/___     / __ \\____  ____  ____ _   / __ \\____  ____  ____ _"  << endl <<   "  / / __/ __ \\   / / / / __ \\/ __ \\/ __ `/  / / / / __ \\/ __ \\/ __ `/"  << endl <<  " / /_/ / /_/ /  / /_/ / /_/ / / / / /_/ /  / /_/ / /_/ / / / / /_/ / "  << endl <<  " \\____/\\____/  /_____/\\____/_/ /_/\\__, /  /_____/\\____/_/_/_/\\__, /  "  << endl <<  "                    \\ \\/ /___  __/____/___________  / / __/ /____/   "  << endl <<  "                     \\  / __ \\/ / / / ___/ ___/ _ \\/ / /_            "  << endl <<  "                     / / /_/ / /_/ / /  (__  )  __/ / __/            "  << endl <<  "                    /_/\\____/\\__,_/_/  /____/\\___/_/_/               "  << endl
     << endl << "* v2.0 - snox - 08/2023 " << endl << endl;
-    cout << "Enter character name without file extension (case sensitive): "; cin >> pfileName; cout << endl;
+    cout << "Enter character name without file extension (case sensitive): "; cin >> pfileName;
+    unsigned modeNum;
+    MODE:
+    cout << "Select mode: "; cin >> modeNum; cout << endl;
+    switch (modeNum)
+    {
+    case 1:
+        partOne(pfileName);
+        break;
+    case 2:
+        partTwo(pfileName);
+        break;
+    case 3:
+        partThree(pfileName);
+        break;
+    case 4:
+        partFour(pfileName);
+        break;
+    default:
+        cout << "Invalid mode number." << endl;
+        goto MODE;
+        break;
+    }
+    
     partTwo(pfileName);
     cout << endl << "Press any key to close." << endl;
     system("pause >nul");
