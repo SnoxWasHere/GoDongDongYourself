@@ -95,7 +95,113 @@ void partTwo(string pfile)
     delete status;
 }
 
-void partThree(string pfile) {}
+void partThree(string pfile) 
+{
+    util::Status* status = new util::Status("Opening files");
+    string wDir = string("./") + pfile + "/";
+    
+    //open ddi & ddg
+    DDInfo* ddi = new DDInfo(wDir, "full.ddi");
+    vector<util::iRen> dlst = ddi->read();
+    delete ddi;
+
+    DDGrid* ddg = new DDGrid(wDir, "full.ddg");
+    vector<util::mRen> mlst = ddg->read();
+    delete ddg;
+    
+    fs::create_directories(wDir + string("new"));
+    string gDir = wDir + "grids/";
+    wDir += "new/";
+
+    delete status;
+    status = new util::Status("Extracting grids", mlst.size());
+    
+    for (auto &grid : mlst)
+    {
+        uint8_t ix = 0, iy = 0;
+        for (uint8_t i = 0; i < grid.count; i++)
+        {
+            util::iRen dts = dlst[grid.imgs[i]];
+            string com = (string("magick convert ") + gDir + to_string(grid.num) + string("g.png ") 
+                        + string(" -crop ") + to_string(dts.w) + "x" + to_string(dts.h) 
+                        + string("+") + to_string(grid.w * 10 * ix) + string("+") + to_string(grid.h * 10 * iy)
+                        + string(" -channel alpha -threshold 50\% -channel RGBA -colors 254 ")
+                        + wDir + to_string(grid.imgs[i]) + string("e.png"));
+            system(com.c_str());
+            
+            //raw
+            system((string("magick convert ") + wDir + to_string(grid.imgs[i]) + string("e.png ")
+                    + wDir + to_string(grid.imgs[i]) + string("e.RGBA")).c_str());
+            //palette
+            system((string("magick convert ") + wDir + to_string(grid.imgs[i]) + string("e.png ")
+                    + string(" -unique-colors ") + wDir + to_string(grid.imgs[i]) + string("p.RGBA")).c_str());
+
+            
+            
+            ifstream pargb ((wDir + to_string(grid.imgs[i]) + string("p.RGBA")).c_str(), ifstream::binary);
+            pargb.seekg (0, pargb.end);
+            int plength = pargb.tellg();
+            pargb.seekg (0, pargb.beg);
+
+            char* palbuf = new char [1024];
+            memset(palbuf, 0, 1024);
+
+            pargb.read (palbuf,plength);
+            //fill remainder of palette with black (00,00,00,00)
+
+            
+            ifstream eimg ((wDir + to_string(grid.imgs[i]) + string("e.RGBA")).c_str(), ifstream::binary);
+            eimg.seekg (0, eimg.end);
+            int elength = eimg.tellg();
+            eimg.seekg (0, eimg.beg);
+
+            char* imgbuf = new char [elength];
+            memset(imgbuf, 0, elength);
+
+
+            eimg.read (imgbuf,elength);
+
+            uint32_t* imgp = reinterpret_cast<uint32_t*>(imgbuf);
+            uint32_t* palp = reinterpret_cast<uint32_t*>(palbuf);
+
+            ofstream ddp ((wDir + to_string(grid.imgs[i]) + string("e.ddp")).c_str(), ios::binary);
+
+            //compare each 4 byte color in image to palette and write down the index
+            for (uint32_t j = 0; j < (elength / 4); j++)
+            {
+                for (uint16_t jx = 0; jx < (plength / 4); jx++)
+                {
+                    if (*(imgp + j) == *(palp + jx))
+                    {
+                        ddp.put(jx);
+                        break;
+                    }
+                    
+                }
+                
+            }
+            ddp.flush();
+            ddp.close();
+            delete[] palbuf;
+            delete[] imgbuf;
+            pargb.close();
+            eimg.close();
+            
+            remove((wDir + to_string(grid.imgs[i]) + string("e.RGBA")).c_str());
+            
+            if (ix == 3) //width is always 4
+            {
+                ix = 0;
+                iy++;
+            }
+            else
+            {
+                ix++;
+            }
+        }
+        
+    }
+}
 void partFour(string pfile) {}
 
 
@@ -127,7 +233,7 @@ int main()
         goto MODE;
         break;
     }
-    
+
     cout << endl << "Press any key to close." << endl;
     system("pause >nul");
     return 0;
