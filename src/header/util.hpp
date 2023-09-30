@@ -56,6 +56,12 @@ namespace util
         uint8_t count;
         uint16_t imgs[16];
     };
+    inline int getLength(std::ifstream &f) {
+        f.seekg (0, f.end);
+        int flen = f.tellg();
+        f.seekg (0, f.beg);
+        return flen;
+    }
     void memset32(void* dest, uint32_t value, uintptr_t size); //fills back-to-front with 32 bit int
     void rawWrite(std::string name, uint16_t width, uint16_t height, uint8_t* start, util::BGRA* pallete); //writes .RGBA from .player
 }

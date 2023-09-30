@@ -304,7 +304,8 @@ void PlayerFile::createImages()
     bool beefedup;
     uint8_t* imgStart;
     util::BGRA* tmppal;
-    RawImage::setDir("./KEN/main/");
+    outputDir += "main/";
+    RawImage::setDir(outputDir);
 
     for (uint32_t ij = 0; ij < slst.size(); ij++)
     {

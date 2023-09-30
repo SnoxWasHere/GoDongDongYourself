@@ -64,6 +64,9 @@ struct gridStrings
         system(com.c_str());
     }
 
+    static void removeRaw(std::string &dir, uint16_t n) {
+        remove((dir + std::to_string(n) + "e.RGBA").c_str());
+    }
 
 };
 uint16_t gridStrings::bW = 0;

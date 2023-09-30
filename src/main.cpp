@@ -108,6 +108,7 @@ void partThree(string pfile)
     
     //open ddi & ddg
     DDInfo* ddi = new DDInfo(wDir, "full.ddi");
+    //don't remove the ones that don't exist anymore
     vector<util::iRen> dlst = ddi->read();
     delete ddi;
 
@@ -120,69 +121,68 @@ void partThree(string pfile)
     wDir += "new/";
 
     delete status;
-    status = new util::Status("Extracting grids", mlst.size());
+    status = new util::Status("Extracting grids", mlst.size() * 16);
     gridStrings::setRGBAInfo(wDir);
-    for (auto &grid : mlst)
+    for (unsigned inum = 0; auto &grid : mlst)
     {
-        uint8_t ix = 0, iy = 0;
         gridStrings::setGridInfo(gDir, wDir, grid.num, grid.w, grid.h);
-        for (uint8_t i = 0; i < grid.count; i++)
+        for (uint8_t i = 0, ix = 0, iy = 0; i < grid.count; i++)
         {
-            util::iRen dts = dlst[grid.imgs[i]];
-            gridStrings::cropGrid(dts.w, dts.h, ix, iy, dts.num);
+            util::iRen img = dlst[grid.imgs[i]];
+            gridStrings::cropGrid(img.w, img.h, ix, iy, img.num);
             
-            ifstream pargb ((wDir + to_string(grid.imgs[i]) + string("p.RGBA")).c_str(), ifstream::binary);
-            pargb.seekg (0, pargb.end);
-            int plength = pargb.tellg();
-            pargb.seekg (0, pargb.beg);
+            //open pallete
+            ifstream palFile ((wDir + to_string(img.num) + string("p.RGBA")).c_str(), ifstream::binary);
 
             char* palbuf = new char [1024];
-            memset(palbuf, 0, 1024);
-
-            pargb.read (palbuf,plength);
-            //fill remainder of palette with black (00,00,00,00)
-
+            memset(palbuf, 0, 1024); 
+            palFile.read (palbuf, 1024);
+            palFile.close();
             
-            ifstream eimg ((wDir + to_string(grid.imgs[i]) + string("e.RGBA")).c_str(), ifstream::binary);
-            eimg.seekg (0, eimg.end);
-            int elength = eimg.tellg();
-            eimg.seekg (0, eimg.beg);
+            //open image
+            ifstream imgFile ((wDir + to_string(img.num) + string("e.RGBA")).c_str(), ifstream::binary);
+            int imgLen = util::getLength(imgFile);
 
-            char* imgbuf = new char [elength];
-            memset(imgbuf, 0, elength);
+            char* imgbuf = new char [imgLen];
+            memset(imgbuf, 0, imgLen);
+            imgFile.read (imgbuf,imgLen);
+            imgFile.close();
 
+            uint32_t* imgptr = reinterpret_cast<uint32_t*>(imgbuf);
+            uint32_t* palptr = reinterpret_cast<uint32_t*>(palbuf);
 
-            eimg.read (imgbuf,elength);
-
-            uint32_t* imgp = reinterpret_cast<uint32_t*>(imgbuf);
-            uint32_t* palp = reinterpret_cast<uint32_t*>(palbuf);
-
-            ofstream ddp ((wDir + to_string(grid.imgs[i]) + string("e.ddp")).c_str(), ios::binary);
+            ofstream idx ((wDir + to_string(img.num) + string("e.idx")).c_str(), ios::binary);
 
             //compare each 4 byte color in image to palette and write down the index
-            for (uint32_t j = 0; j < (elength / 4); j++) {
-                for (uint16_t jx = 0; jx < (plength / 4); jx++) {
-                    if (*(imgp + j) == *(palp + jx)) {
-                        ddp.put(jx);
+            for (uint32_t j = 0; j < (imgLen / 4); j++) {
+                bool done = false; //in case color isn't found in palette
+                for (uint16_t jx = 0; jx < (1024 / 4); jx++) {
+                    if (*(imgptr + j) == *(palptr + jx)) 
+                    {
+                        idx.put(jx);
+                        done = true;
                         break;
                     }
                 }
+                if(!done) {idx.put(0x00);}
             }
-            ddp.flush();
-            ddp.close();
+            idx.flush();
+            idx.close();
             delete[] palbuf;
             delete[] imgbuf;
-            pargb.close();
-            eimg.close();
             
-            remove((wDir + to_string(grid.imgs[i]) + string("e.RGBA")).c_str());
+            gridStrings::removeRaw(wDir, img.num);
             
             if (ix == 3) {ix = 0; iy++;}
             else         {ix++;}
+            inum++;
+            status->update(inum);
         }
+        
     }
     delete status;
 }
+
 void partFour(string pfile) {}
 
 

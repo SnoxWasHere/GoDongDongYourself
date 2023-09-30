@@ -12,8 +12,8 @@ private:
     uint16_t _h;
 public:
     std::ofstream file;
-    static inline void setDir(std::string str) {RawImage::_dir = str;}
-    RawImage(std::string n, uint16_t w, uint16_t h) : _name(n), _w(w), _h(h) {this->file.open(_dir + _name + ".RGBA", std::ios::binary);}
+    static inline void setDir(std::string &str) {RawImage::_dir = str;}
+    RawImage(std::string &n, uint16_t w, uint16_t h) : _name(n), _w(w), _h(h) {this->file.open(_dir + _name + ".RGBA", std::ios::binary);}
     void writeColor(util::BGRA &color);
     void createPNG();
     inline void deleteFile() {remove((_dir + _name + ".RGBA").c_str());}
