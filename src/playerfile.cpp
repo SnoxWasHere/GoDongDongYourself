@@ -151,9 +151,9 @@ PlayerFile::PlayerFile(std::string file)
 {
     util::Status status("Opening file");
     this->fileName = file;
-    std::string fileDir = "./";
+    this->outputDir = "./";
 
-    _playerFile.open(fileDir + fileName + ".player", std::ios::binary);
+    _playerFile.open(outputDir + fileName + ".player", std::ios::binary);
 
     if(!_playerFile.is_open()) //error probably won't happen anymore
     {
@@ -185,7 +185,6 @@ void PlayerFile::readHeader()
 void PlayerFile::createDir()
 {
     util::Status status("Creating directories");
-    this->outputDir = "./";
     this->outputDir += fileName;
     std::filesystem::create_directories(outputDir);
     

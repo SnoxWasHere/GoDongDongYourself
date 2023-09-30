@@ -8,6 +8,7 @@
 
 #define BEEFVAL 0xBEEFFACE
 
+void partFour(std::string pfile);
 class PlayerFile
 {
 private:
@@ -19,6 +20,7 @@ private:
 
     void extract(uint8_t* dst, uint8_t* src, uint32_t size, uint32_t newsize = 0, uint32_t pij = 0);
 public:
+    friend void partFour(std::string pfile); //allows direct file manip
     std::string fileName;
     std::string outputDir;
     char charName[0x100];
@@ -33,6 +35,7 @@ public:
     inline void closePlayerFile() {_playerFile.close();}
     void createImages();
     ~PlayerFile();
+    inline int getPosition() {return _playerFile.tellg();}
 };
 
 #endif

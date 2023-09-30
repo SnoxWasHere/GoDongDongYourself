@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.5)
-project(testproject2)
+project(GoDongDongYourself VERSION 2.0)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin/)
 
 add_compile_options(-Wno-narrowing)
