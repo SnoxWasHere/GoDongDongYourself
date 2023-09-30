@@ -43,8 +43,24 @@ struct gridStrings
         gridStrings::bH = h*10;
     }
 
+    static std::string rgbaStr;
+    static void setRGBAInfo(std::string &dir) {
+        rgbaStr = std::vformat(
+            "magick convert {0}{{0}}e.png {{1}} {0}{{0}}{{2}}.RGBA",
+            std::make_format_args(dir));
+    }
+
     static void cropGrid(uint16_t w, uint16_t h, uint8_t ix, uint8_t iy, uint16_t num){
+        //creating cropped png
         std::string com = std::vformat(cropStr, std::make_format_args(w, h, bW*ix, bH*iy, num));
+        system(com.c_str());
+
+        //creating raw image
+        com = std::vformat(rgbaStr, std::make_format_args(num, "", "e"));
+        system(com.c_str());
+
+        //creating palette
+        com = std::vformat(rgbaStr, std::make_format_args(num, "-unique-colors", "p"));
         system(com.c_str());
     }
 
@@ -53,4 +69,5 @@ struct gridStrings
 uint16_t gridStrings::bW = 0;
 uint16_t gridStrings::bH = 0;
 std::string gridStrings::cropStr = "";
+std::string gridStrings::rgbaStr = "";
 #endif

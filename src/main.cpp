@@ -121,7 +121,7 @@ void partThree(string pfile)
 
     delete status;
     status = new util::Status("Extracting grids", mlst.size());
-    
+    gridStrings::setRGBAInfo(wDir);
     for (auto &grid : mlst)
     {
         uint8_t ix = 0, iy = 0;
@@ -130,16 +130,6 @@ void partThree(string pfile)
         {
             util::iRen dts = dlst[grid.imgs[i]];
             gridStrings::cropGrid(dts.w, dts.h, ix, iy, dts.num);
-
-            
-            //raw
-            system((string("magick convert ") + wDir + to_string(grid.imgs[i]) + string("e.png ")
-                    + wDir + to_string(grid.imgs[i]) + string("e.RGBA")).c_str());
-            //palette
-            system((string("magick convert ") + wDir + to_string(grid.imgs[i]) + string("e.png ")
-                    + string(" -unique-colors ") + wDir + to_string(grid.imgs[i]) + string("p.RGBA")).c_str());
-
-            
             
             ifstream pargb ((wDir + to_string(grid.imgs[i]) + string("p.RGBA")).c_str(), ifstream::binary);
             pargb.seekg (0, pargb.end);
