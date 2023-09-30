@@ -27,6 +27,12 @@ void partTwo(string pfile)
     DDInfo ddi(wDir, "full.ddi");
     //read ddi to vector dlst
     vector<util::iRen> dlst = ddi.read();
+    //remove ones moved to unchanged
+    for (int ij = 0; ij < dlst.size(); ij++) {
+        if (!std::filesystem::exists(wDir + std::string("main/") + std::to_string(ij) + ".png")) {
+            dlst.erase(dlst.begin() + ij);
+        }
+    }
 
     //create ddg
     unsigned imgNum = dlst.size();
@@ -119,15 +125,12 @@ void partThree(string pfile)
     for (auto &grid : mlst)
     {
         uint8_t ix = 0, iy = 0;
+        gridStrings::setGridInfo(gDir, wDir, grid.num, grid.w, grid.h);
         for (uint8_t i = 0; i < grid.count; i++)
         {
             util::iRen dts = dlst[grid.imgs[i]];
-            string com = (string("magick convert ") + gDir + to_string(grid.num) + string("g.png ") 
-                        + string(" -crop ") + to_string(dts.w) + "x" + to_string(dts.h) 
-                        + string("+") + to_string(grid.w * 10 * ix) + string("+") + to_string(grid.h * 10 * iy)
-                        + string(" -channel alpha -threshold 50\% -channel RGBA -colors 254 ")
-                        + wDir + to_string(grid.imgs[i]) + string("e.png"));
-            system(com.c_str());
+            gridStrings::cropGrid(dts.w, dts.h, ix, iy, dts.num);
+
             
             //raw
             system((string("magick convert ") + wDir + to_string(grid.imgs[i]) + string("e.png ")
@@ -167,18 +170,13 @@ void partThree(string pfile)
             ofstream ddp ((wDir + to_string(grid.imgs[i]) + string("e.ddp")).c_str(), ios::binary);
 
             //compare each 4 byte color in image to palette and write down the index
-            for (uint32_t j = 0; j < (elength / 4); j++)
-            {
-                for (uint16_t jx = 0; jx < (plength / 4); jx++)
-                {
-                    if (*(imgp + j) == *(palp + jx))
-                    {
+            for (uint32_t j = 0; j < (elength / 4); j++) {
+                for (uint16_t jx = 0; jx < (plength / 4); jx++) {
+                    if (*(imgp + j) == *(palp + jx)) {
                         ddp.put(jx);
                         break;
                     }
-                    
                 }
-                
             }
             ddp.flush();
             ddp.close();
@@ -189,18 +187,11 @@ void partThree(string pfile)
             
             remove((wDir + to_string(grid.imgs[i]) + string("e.RGBA")).c_str());
             
-            if (ix == 3) //width is always 4
-            {
-                ix = 0;
-                iy++;
-            }
-            else
-            {
-                ix++;
-            }
+            if (ix == 3) {ix = 0; iy++;}
+            else         {ix++;}
         }
-        
     }
+    delete status;
 }
 void partFour(string pfile) {}
 

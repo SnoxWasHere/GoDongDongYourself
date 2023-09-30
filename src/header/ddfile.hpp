@@ -56,19 +56,15 @@ public:
         util::iRen img;
         for (uint16_t i = 0; i < numImg; i++)
         {
-            //hopefully the directories Should Just Work
-            if (std::filesystem::exists(_dir + std::string("main/") + std::to_string(i) + ".png")) 
-            {
-                util::iRen img;
-                memset(&img, 0, sizeof(util::iRen));
-                _file.read(charptr(&img), 8);
-                //reading to a struct of different types of ints is difficult so this is the solution
-                //check if this is still necessary now that switched to fstream
-                img.ofs = (img.ofsa) | (img.ofsb << 16); 
-                img.num = i;
-                output.push_back(img);
-            }
-            else {_file.seekg(8, std::ios::cur);}
+            //removing directories from this because not always
+            util::iRen img;
+            memset(&img, 0, sizeof(util::iRen));
+            _file.read(charptr(&img), 8);
+            //reading to a struct of different types of ints is difficult so this is the solution
+            //check if this is still necessary now that switched to fstream
+            img.ofs = (img.ofsa) | (img.ofsb << 16); 
+            img.num = i;
+            output.push_back(img);
         }
         return output; 
     }

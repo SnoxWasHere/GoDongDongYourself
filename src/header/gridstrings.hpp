@@ -1,6 +1,7 @@
 #ifndef GRIDSTR_HPP
 #define GRIDSTR_HPP
 #include "util.hpp"
+#include <format>
 
 struct gridStrings
 {
@@ -33,9 +34,23 @@ struct gridStrings
         //overlay captions on top
         system((std::string("magick convert ") + dir + std::to_string(num) + std::string("gt.png -pointsize 14 ") + bigCap + " -pointsize 10 " + smallCap + dir + std::to_string(num) + std::string("gt.png")).c_str());
     }
+    static std::string cropStr;
+    static void setGridInfo(std::string &iDir, std::string &oDir, uint8_t n, uint8_t w, uint8_t h){
+        cropStr = std::vformat(
+            "magick convert {0}{1}g.png -crop {{0}}x{{1}}+{{2}}+{{3}} -channel alpha -threshold 50\% -channel RGBA -colors 254 {2}{{4}}e.png",
+            std::make_format_args(iDir, n, oDir));
+        gridStrings::bW = w*10;
+        gridStrings::bH = h*10;
+    }
+
+    static void cropGrid(uint16_t w, uint16_t h, uint8_t ix, uint8_t iy, uint16_t num){
+        std::string com = std::vformat(cropStr, std::make_format_args(w, h, bW*ix, bH*iy, num));
+        system(com.c_str());
+    }
+
 
 };
 uint16_t gridStrings::bW = 0;
 uint16_t gridStrings::bH = 0;
-
+std::string gridStrings::cropStr = "";
 #endif
