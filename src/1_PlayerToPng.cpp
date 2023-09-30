@@ -36,20 +36,20 @@ struct hRen
     uint8_t* unk = nullptr;
 };
 
- struct Sound
- {
+struct Sound
+{
     char name[0x24];
     uint32_t size;
     uint16_t unk;
- };
+};
 
- struct BGRA
- {
+struct BGRA
+{
     uint8_t b;
     uint8_t g;
     uint8_t r;
     uint8_t a;
- };
+};
 
 BGRA pals[0x100];
 
@@ -81,11 +81,9 @@ uint8_t progbar = 0;
 
 uint8_t* filp;
 
-using ppals = BGRA*;
+BGRA* tmppal;
 
-ppals tmppal;
-
-ppals pallt[8];
+BGRA* pallt[8];
 
 uint8_t* mempal;
 
@@ -121,7 +119,7 @@ void toChar(ofstream &file, uint8_t chars[], uint8_t size, uint32_t val)
     file.write(reinterpret_cast<const char*>(chars), size);
 }
 
-void PPMWrite(string directory, string name, uint32_t height, uint32_t width, uint8_t* start, ppals pallete)
+void PPMWrite(string directory, string name, uint32_t height, uint32_t width, uint8_t* start, BGRA* pallete)
 {
     //creates RGB .ppm and Alpha .pbm and uses ImageMagick to combine them into a .png 
     
@@ -332,7 +330,7 @@ int main()
     
     
     vector<hRen*> slst;
-    vector<ppals> plst;
+    vector<BGRA*> plst;
     
     ovr.Offset = 0;
     ovr.OffsetHigh = 0;
@@ -492,7 +490,8 @@ int main()
     mempal = new uint8_t[0x2100]; //8 palletes
     ReadFileEx(fil, mempal, 0x2100, &ovr, nullptr);
     ovr.Offset += 0x2100;
-    
+    cout << ovr.Offset << endl;
+    cerr << "dave";
     ReadFileEx(fil, &snd_n, 4, &ovr, nullptr);
 
     ovr.Offset += 4;
@@ -536,7 +535,7 @@ int main()
     
     for (int ij = 0; ij <= 7; ij++)
     {
-        pallt[ij] = reinterpret_cast<ppals>(mempal + ij * 0x420);
+        pallt[ij] = reinterpret_cast<BGRA*>(mempal + ij * 0x420);
     }
     fs::create_directories(dir + "main");
     fs::create_directories(dir + "unchanged");
@@ -557,7 +556,7 @@ int main()
         if (zps->pal == 1) //if image contains it's own palette
         {
             
-            tmppal = reinterpret_cast<ppals>(zps->unk);
+            tmppal = reinterpret_cast<BGRA*>(zps->unk);
 
             //some images only have a 512 byte palette before the image begins as opposed to the presumed 1024
             //this doesn't cause issues upon reading because of how size is stored within the header
