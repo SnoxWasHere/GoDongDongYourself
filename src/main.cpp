@@ -72,7 +72,8 @@ void partTwo(string pfile)
             bigW = (bigW / 10) * 10 + 20;
             bigH = (bigH / 10) * 10 + 20;
 
-            util::mRen header = {gridNum, bigW/10, bigH/10, cgrid.size(), *cImgs};
+            util::mRen header = {gridNum, bigW/10, bigH/10, cgrid.size()};
+            memcpy(header.imgs, cImgs, sizeof(cImgs));
             ddg.write(header);
             
             gridStrings::bW = bigW;
@@ -208,7 +209,7 @@ int main()
 {
     string pfileName;
     cout << "    ______         ____                       ____                   "  << endl <<  "   / ____/___     / __ \\____  ____  ____ _   / __ \\____  ____  ____ _"  << endl <<   "  / / __/ __ \\   / / / / __ \\/ __ \\/ __ `/  / / / / __ \\/ __ \\/ __ `/"  << endl <<  " / /_/ / /_/ /  / /_/ / /_/ / / / / /_/ /  / /_/ / /_/ / / / / /_/ / "  << endl <<  " \\____/\\____/  /_____/\\____/_/ /_/\\__, /  /_____/\\____/_/_/_/\\__, /  "  << endl <<  "                    \\ \\/ /___  __/____/___________  / / __/ /____/   "  << endl <<  "                     \\  / __ \\/ / / / ___/ ___/ _ \\/ / /_            "  << endl <<  "                     / / /_/ / /_/ / /  (__  )  __/ / __/            "  << endl <<  "                    /_/\\____/\\__,_/_/  /____/\\___/_/_/               "  << endl
-    << endl << "* v2.0 - snox - 08/2023 " << endl << endl;
+    << endl << "* v2.0 - snox - 08/2023 *" << endl << endl;
     cout << "Enter character name without file extension (case sensitive): "; cin >> pfileName;
     unsigned modeNum;
     MODE: //go back if given an invalid input
