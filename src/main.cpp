@@ -1,6 +1,7 @@
 #include "header\playerfile.hpp"
 #include "header\ddfile.hpp"
 #include "header\gridstrings.hpp"
+#include "header\merger.hpp"
 
 using namespace std;
 namespace fs = std::filesystem;
@@ -187,7 +188,6 @@ void partThree(string pfile)
 
 void partFour(string pfile) 
 {
-    util::Status* status = new util::Status("Opening files");
     string wDir = string("./") + pfile + "/";
     string tDir = wDir + "new/";
     
@@ -209,8 +209,8 @@ void partFour(string pfile)
     PlayerFile player(pfile);
     player.readHeader();    
 
-    delete status;
-    status = new util::Status("Initializing character file");
+
+    util::Status* status = new util::Status("Initializing character file");
 
     ofstream modded(player.outputDir + player.fileName + "modded.player", std::ios::binary);
     unsigned pLen = util::getLength(player._playerFile, player.getPosition());
@@ -230,176 +230,30 @@ void partFour(string pfile)
     memset(blankbuf, 0, 20); //for when we just need 20 zeros
 
     delete status;
-    status = new util::Status("Writing images", dlst.size());
+    ImageMerger::dir = tDir;
+    ImageMerger merger(&player._playerFile, &modded, &dlst, &changed);
+    merger.run();
 
-    //begin going through each image
-    uint16_t count = 0;
-    while (count < dlst.size())
-    {
-        if (player.getPosition() != dlst[count].ofs) { //skip over blank space in player file
-            //copy whats there just incase, although probably just 0
-            unsigned blankSpace = dlst[count].ofs - player.getPosition();
-            char* buffer = new char[blankSpace];
-            memset(buffer, 0, blankSpace);
-            player._playerFile.read(buffer, blankSpace);
-
-            modded.write(buffer, blankSpace);
-            delete[] buffer;
-        }
-        
-        else if (changed[count] == 1) //image was found in grid
-        {
-            ifstream idx ((tDir + to_string(dlst[count].num) + "e.idx").c_str(), ifstream::binary);
-            int ddlength = util::getLength(idx);
-            
-            char* buffer = new char[20];
-            memset(buffer, 0, 20);
-            player._playerFile.read(buffer, 20);
-
-            if (util::isEmpty(buffer, 20)) //don't increase count
-            {
-                modded.write(blankbuf, 20);
-                delete[] buffer;
-            }  
-            else
-            {
-                modded.write(buffer, 16);
-                modded.write(blankbuf, 4); //set size equal to 0
-                //this allows us to write the uncompressed data 1:1 without trouble 
-
-                uint32_t sizzle = 0;
-                //TODO - see if i work with just dlst[i].size
-                //weird negative positive stuff happens without cast
-                sizzle |= static_cast<uint8_t>(buffer[16]);
-                sizzle |= static_cast<uint8_t>(buffer[17]) << 8;
-                sizzle |= static_cast<uint8_t>(buffer[18]) << 16;
-                sizzle |= static_cast<uint8_t>(buffer[19]) << 24;
-                
-
-                if (buffer[12] != 0) //checking for palette
-                {
-                    delete[] buffer;
-                    ifstream prga ((tDir + to_string(dlst[count].num) + "p.RGBA").c_str(), ios::binary);
-                    int prglength = util::getLength(prga);
-                    buffer = new char[1024];
-                    memset(buffer, 0, 1024);
-
-                    prga.read(buffer, prglength);
-                    for (int ip = 0; ip < 1024; ip+= 4) 
-                    {   //rearrange RGBA to BGRA
-                        if(ip < prglength) {
-                            modded.put(buffer[ip + 2]);
-                            modded.put(buffer[ip + 1]);
-                            modded.put(buffer[ip + 0]);
-                            modded.put(buffer[ip + 3]);
-                        }
-                        else {modded.write(blankbuf, 4);}
-                    }
-                    //as of v1.1, a 1024 byte palette is presumed
-                    //thankfully all of the 512 images are usually just particle effects anyways
-                    //purposely untested
-                    modded.flush();
-                    prga.close();
-                }
-                delete[] buffer;
-                //copy-paste entire .idx
-                buffer = new char[ddlength];
-                memset(buffer, 0, ddlength);
-                idx.read(buffer, ddlength);
-
-                modded.write(buffer, ddlength);
-                delete[] buffer;
-                //jump ahead by normal image size
-                player._playerFile.seekg(sizzle, ios::cur);
-
-                count++;
-                status->update(count);
-                idx.close();
-            }
-        }
-        else //unchanged image
-        {
-            buffer = new char[20];
-            memset(buffer, 0, 20);
-            player._playerFile.read(buffer, 20);
-
-            if (util::isEmpty(buffer, 20)) //count not increased
-            {
-                modded.write(blankbuf, 20);
-                delete[] buffer;
-            }  
-            else
-            {
-                modded.write(buffer, 20);
-                delete[] buffer;
-                if (count + 1 < dlst.size()) //overflow protection
-                {
-                    //dist between where we are now and where the next header is
-                    //TODO technically could be optimized to go to next changed
-                    uint32_t highwater = dlst[count + 1].ofs - dlst[count].ofs - 20;
-                    buffer = new char[highwater];
-                    memset(buffer, 0, highwater);
-                    player._playerFile.read(buffer, highwater);
-                    
-                    modded.write(buffer, highwater);
-                    delete[] buffer;
-                }
-                //it's fine to just ignore the last image if it's unchanged because of the next step
-                count++;
-                status->update(count);
-            }
-        }
-        
-        modded.flush();
-    }
     //sound time!
-    string sDir = wDir + "snd/";
-    DDSound dds(sDir, "full.dds");
-    vector<pair<uint32_t, uint32_t>> sounds = dds.read();
-    vector<uint8_t> sChanged;
-    for (int ij = 0; ij < sounds.size(); ij++) {
-        if (fs::exists(sDir + std::to_string(ij) + ".wav")) {
-            sChanged.push_back(1); //check if changed
-        } else {
-            sChanged.push_back(0);
-        }
-    }
-
-    unsigned pToSound = sounds[0].second - player.getPosition();
-    //copy everything between where we are now and the first sound
-    buffer = new char[pToSound];
-    memset(buffer, 0, pToSound);
-    player._playerFile.read(buffer, pToSound);
-    modded.write(buffer, pToSound);
-    delete[] buffer;
-
-    //TODO - generalize image framework to work with sounds
-    //same loop structure as before
-    /* vague layout
-    * template <typename T> class Merger
-    * unsigned count = 0;
-    * Merger(ifstream player, ofstream modded, vector<T> list, vector<uint32_t> changed)
-    * void run()
-    * {
-    *   while (count < list.size())
-    *   {
-    *       if(pos != next changed pos) {
-    *           skipToNext(); //can probably be non-virtual even
-    *       }
-    *       else 
-    *       {
-    *           player.read(buffer, 20);
-    *           if(blank)   {doNothing();} //non-virtual
-    *           else if(changed) {changedCopy();} //virtual but stil pretty similar
-    *           else        {unchangedCopy();} //hopefully non-virtual if create sound struct
-    *       }
-    *
-    *   }
-    * }
-    */
-    //maybe change changedVect to store indexes instead of bools
-    //allow for perfect skipping over changed members
-
+    // string sDir = wDir + "snd/";
+    // DDSound dds(sDir, "full.dds");
+    // vector<pair<uint32_t, uint32_t>> sounds = dds.read();
+    // vector<uint8_t> sChanged;
+    // for (int ij = 0; ij < sounds.size(); ij++) {
+    //     if (fs::exists(sDir + std::to_string(ij) + ".wav")) {
+    //         sChanged.push_back(1); //check if changed
+    //     } else {
+    //         sChanged.push_back(0);
+    //     }
+    // }
+    //
+    // unsigned pToSound = sounds[0].second - player.getPosition();
+    // //copy everything between where we are now and the first sound
+    // buffer = new char[pToSound];
+    // memset(buffer, 0, pToSound);
+    // player._playerFile.read(buffer, pToSound);
+    // modded.write(buffer, pToSound);
+    // delete[] buffer;
     //copy everything else
     unsigned pRemainder = pLen - player.getPosition();
     buffer = new char[pRemainder];
@@ -408,7 +262,7 @@ void partFour(string pfile)
     
     modded.write(buffer, pRemainder);
     delete[] buffer;
-    delete status;
+    //delete status;
     cout << "Rename modded player file to the original and replace it in the game directory." << endl;
     //thank you!
     // <3 snox
