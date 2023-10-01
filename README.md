@@ -18,7 +18,7 @@ You've probably never wanted to put yourself (or anyone else) into the cult clas
 4. Run `(2) - PngToGrid`
 5. Replace all of the images in the generated spritesheets with your own
     - Keep your sprites within the size of the original (same size as the template generated)
-    - Save grid back with same name without template background
+    - Save grid image to same file without template background
     - *No color/alpha reduction is necessary*
 6. Run `(3) - GridToPng` and `(4) - PngToPlayer`
 7. Replace the original .player file with the generated one in the game files
