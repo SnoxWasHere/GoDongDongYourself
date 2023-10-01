@@ -260,14 +260,14 @@ void PlayerFile::createSounds()
     uint32_t snd_n;
     _playerFile.read(charptr(&snd_n), 4);
     util::Status status("Creating sounds", snd_n);
-    //DDSound* dds = new DDSound(outputDir + "snd/", "full.dds", snd_n);
+    DDSound* dds = new DDSound(outputDir + "snd/", "full.dds", snd_n);
 
     for (uint32_t ij = 0; ij < snd_n; ij++)
     {
         //sounds are stored as uncompressed .wavs
         memset(&qqww, 0, sizeof(qqww));
         _playerFile.read(charptr(&qqww), 0x2A);
-        //dds->write(qqww.size);
+        dds->write(qqww.size);
         if(qqww.size != 0)
         {
             uint8_t* snd_m = new uint8_t[qqww.size];
@@ -284,7 +284,7 @@ void PlayerFile::createSounds()
         }
         status.update(ij + 1);
     }
-    //delete dds;
+    delete dds;
 }
 void PlayerFile::createImages()
 {
