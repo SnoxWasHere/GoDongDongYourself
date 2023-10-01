@@ -373,13 +373,22 @@ int main()
     cout << "Enter character name without file extension (case sensitive): "; cin >> pfileName;
     unsigned modeNum;
     MODE: //go back if given an invalid input
-    cout << "Select mode: "; cin >> modeNum; cout << endl;
+    cout << endl << "* MODE SELECT *" << endl;
+    cout << "(1) - PlayerToPng" << endl;
+    cout << "(2) - PngToGrid" << endl;
+    cout << "(3) - GridToPng" << endl;
+    cout << "(4) - PngToPlayer" << endl;
+    cout << "For help, please check README on github." << endl << endl;
+    cout << "Select mode number: "; cin >> modeNum; cout << endl;
     switch (modeNum)
     {
     case 1:
         partOne(pfileName);
         break;
     case 2:
+        cout << "Before continuing, move all sprites you don't wish to change to /unchanged/" << endl;
+        cout << endl << "Press any key to continue." << endl;
+        system("pause >nul");
         partTwo(pfileName);
         break;
     case 3:
