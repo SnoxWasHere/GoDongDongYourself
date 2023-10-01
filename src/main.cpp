@@ -27,11 +27,13 @@ void partTwo(string pfile)
     DDInfo *ddi = new DDInfo(wDir, "full.ddi");
     //read ddi to vector dlst
     vector<util::iRen> dlst = ddi->read();
-    //remove ones moved to unchanged
-    for (int ij = 0; ij < dlst.size(); ij++) {
-        if (!std::filesystem::exists(wDir + std::string("main/") + std::to_string(ij) + ".png")) {
-            dlst.erase(dlst.begin() + ij);
-        }
+    //remove ones moved to unchanged 
+    //bad implementation
+    unsigned iSize = dlst.size();
+    for (unsigned idx = 0, vPos = 0; idx < iSize; idx++) {
+        if (!std::filesystem::exists(wDir + string("main/") + to_string(idx) + ".png")) {
+            dlst.erase(dlst.begin() + vPos);
+        } else {vPos++;}
     }
     delete ddi;
 
@@ -350,6 +352,54 @@ void partFour(string pfile)
         
         modded.flush();
     }
+    //sound time!
+    string sDir = wDir + "snd/";
+    DDSound dds(sDir, "full.dds");
+    vector<pair<uint32_t, uint32_t>> sounds = dds.read();
+    vector<uint8_t> sChanged;
+    for (int ij = 0; ij < sounds.size(); ij++) {
+        if (fs::exists(sDir + std::to_string(ij) + ".wav")) {
+            sChanged.push_back(1); //check if changed
+        } else {
+            sChanged.push_back(0);
+        }
+    }
+
+    unsigned pToSound = sounds[0].second - player.getPosition();
+    //copy everything between where we are now and the first sound
+    buffer = new char[pToSound];
+    memset(buffer, 0, pToSound);
+    player._playerFile.read(buffer, pToSound);
+    modded.write(buffer, pToSound);
+    delete[] buffer;
+
+    //TODO - generalize image framework to work with sounds
+    //same loop structure as before
+    /* vague layout
+    * template <typename T> class Merger
+    * unsigned count = 0;
+    * Merger(ifstream player, ofstream modded, vector<T> list, vector<uint32_t> changed)
+    * void run()
+    * {
+    *   while (count < list.size())
+    *   {
+    *       if(pos != next changed pos) {
+    *           skipToNext(); //can probably be non-virtual even
+    *       }
+    *       else 
+    *       {
+    *           player.read(buffer, 20);
+    *           if(blank)   {doNothing();} //non-virtual
+    *           else if(changed) {changedCopy();} //virtual but stil pretty similar
+    *           else        {unchangedCopy();} //hopefully non-virtual if create sound struct
+    *       }
+    *
+    *   }
+    * }
+    */
+    //maybe change changedVect to store indexes instead of bools
+    //allow for perfect skipping over changed members
+
     //copy everything else
     unsigned pRemainder = pLen - player.getPosition();
     buffer = new char[pRemainder];
