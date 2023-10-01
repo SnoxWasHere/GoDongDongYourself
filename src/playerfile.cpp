@@ -265,9 +265,10 @@ void PlayerFile::createSounds()
     for (uint32_t ij = 0; ij < snd_n; ij++)
     {
         //sounds are stored as uncompressed .wavs
+        uint32_t sPos = _playerFile.tellg();
         memset(&qqww, 0, sizeof(qqww));
         _playerFile.read(charptr(&qqww), 0x2A);
-        dds->write(qqww.size);
+        dds->write(std::pair<uint32_t, uint32_t>(qqww.size, sPos));
         if(qqww.size != 0)
         {
             uint8_t* snd_m = new uint8_t[qqww.size];
@@ -276,11 +277,9 @@ void PlayerFile::createSounds()
             std::string str = outputDir + std::string("snd/") + std::to_string(ij) + std::string(".wav");
 
             std::ofstream fil2(str, std::ios::binary);
-            //test me!
             fil2.write(charptr(snd_m), qqww.size);
             fil2.close();
             delete[] snd_m;
-            
         }
         status.update(ij + 1);
     }

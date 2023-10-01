@@ -18,7 +18,7 @@ protected:
 public:
     //blank constructor because too lazy for crtp
     DDFile(std::string d, std::string n) : _dir(d), _name(n) {}
-    virtual void write(input &container) {} //writes one
+    virtual void write(input container) {} //writes one
     virtual std::vector<output> read() {return std::vector<output>();}   //reads all
     void flush() {_file.flush();}
     ~DDFile() {_file.flush(); _file.close();}
@@ -26,7 +26,7 @@ public:
 
 
 
-class DDInfo : public DDFile<util::hRen, util::iRen>
+class DDInfo : public DDFile<util::hRen&, util::iRen>
 {
 protected:
     void writeHeader(int count) override {
@@ -71,7 +71,7 @@ public:
     
 };
 
-class DDGrid : public DDFile<util::mRen, util::mRen>
+class DDGrid : public DDFile<util::mRen&, util::mRen>
 {
 protected:
 void writeHeader(int count) override {
@@ -117,34 +117,39 @@ public:
     }
 };
 
-class DDSound : public DDFile<uint32_t, uint32_t>
+class DDSound : public DDFile<std::pair<uint32_t, uint32_t>, std::pair<uint32_t, uint32_t>>
 {
 protected:
     void writeHeader(int count) override {
+            if(!_file.is_open()) {std::cout << "help";}
             const uint16_t mWord = 0x50DD;
             _file.write(reinterpret_cast<const char*>(&mWord), 2);
             _file.write(charptr(&count), 2);
+            _file.flush();
     }
 public:
     //read
     DDSound(std::string d, std::string n) :        DDFile(d, n) {_file.open(_dir + _name, std::ios::in  | std::ios::binary);}
     //write
     DDSound(std::string d, std::string n, int c) : DDFile(d, n) {_file.open(_dir + _name, std::ios::out | std::ios::binary); writeHeader(c);}
-    void write(uint32_t &size) override {
-        _file.write(charptr(size), 4);
+    void write(std::pair<uint32_t, uint32_t> val) override {
+        //this ampersand costed like half an hour
+        _file.write(charptr(&val.first), 4);  //size
+        _file.write(charptr(&val.second), 4); //ofs
     }
-    std::vector<uint32_t> read() {
-        std::vector<uint32_t> output;
+    std::vector<std::pair<uint32_t, uint32_t>> read() {
+        std::vector<std::pair<uint32_t, uint32_t>> output;
         _file.seekg(2); //magic word
         uint16_t numSounds = 0;
         _file.read(charptr(&numSounds), 2);
 
         for (uint16_t i = 0; i < numSounds; i++) {
-            uint32_t sSize;
-            memset(&sSize, 0, 4);
+            uint32_t sSize = 0;
             _file.read(charptr(&sSize), 4);
+            uint32_t sOfs = 0;
+            _file.read(charptr(&sOfs), 4);
 
-            output.push_back(sSize);
+            output.push_back(std::pair<uint32_t, uint32_t>(sSize, sOfs));
         }
         return output;
     }
