@@ -7,6 +7,7 @@ template <typename T> class Merger
 {
 protected:
     unsigned _count = 0;
+    //have to do pointers to these
     std::ifstream* player;
     std::ofstream* modded;
     std::vector<T>* list; 
@@ -23,6 +24,7 @@ public:
         this->modded = m;
         this->list = l;
         this->changed = c;
+        //blank buffer to be used later
         this->blankbuf = new char[20];
         memset(this->blankbuf, 0, 20);
     }
@@ -66,8 +68,8 @@ template <typename T> void Merger<T>::run()
     status = new util::Status("Writing images", list->size());
     while (this->_count < list->size())
     {
-        if (player->tellg() != list->at(_count).ofs) {
-            this->skipToNext();
+        if (player->tellg() != list->at(_count).ofs) {  
+            this->skipToNext(); //skip to next header
         }
         else {
             headerBuffer = new char[20];
@@ -78,11 +80,11 @@ template <typename T> void Merger<T>::run()
             else {
                 if (changed->at(_count) == 1) {
                     //implement changed header case-by-case
-                    this->changedCopy();
+                    this->changedCopy(); //copy from .idx
                 }
-                else {
+                else { //unchanged
                     modded->write(headerBuffer, 20);
-                    this->unchangedCopy();
+                    this->unchangedCopy(); //copy from .player
                 }
             }
             delete[] headerBuffer;
@@ -138,6 +140,7 @@ void ImageMerger::changedCopy()
         memset(buffer, 0, 1024);
 
         prga.read(buffer, prglength);
+        //prglength % 4 should == 0 always
         for (int ip = 0; ip < 1024; ip+= 4) 
         {   //rearrange RGBA to BGRA
             if(ip < prglength) {
@@ -148,7 +151,7 @@ void ImageMerger::changedCopy()
             }
             else {modded->write(blankbuf, 4);}
         }
-        //as of v1.1, a 1024 byte palette is presumed
+        //as of v2.1, a 1024 byte palette is presumed
         //thankfully all of the 512 images are usually just particle effects anyways
         //purposely untested
         modded->flush();
