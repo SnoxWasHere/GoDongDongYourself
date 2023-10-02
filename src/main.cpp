@@ -219,19 +219,19 @@ void partFour(string pfile)
     uint32_t headstart = player.getPosition();
     char* buffer = new char[headstart];
     memset(buffer, 0, headstart);
+    //go back and get it
     player._playerFile.seekg(0, ios::beg);
     player._playerFile.read(buffer, headstart);
 
     modded.write(buffer, headstart);
     modded.flush();
     delete[] buffer;
-
-    char* blankbuf = new char[20]; 
-    memset(blankbuf, 0, 20); //for when we just need 20 zeros
-
     delete status;
+
     ImageMerger::dir = tDir;
+    //pointer circumvents PlayerFile privacy
     ImageMerger merger(&player._playerFile, &modded, &dlst, &changed);
+    //goes through each member of dlst and transfers the images
     merger.run();
 
     //sound time!
@@ -262,7 +262,6 @@ void partFour(string pfile)
     
     modded.write(buffer, pRemainder);
     delete[] buffer;
-    //delete status;
     cout << "Rename modded player file to the original and replace it in the game directory." << endl;
     //thank you!
     // <3 snox
@@ -290,12 +289,16 @@ int main()
         partOne(pfileName);
         break;
     case 2:
-        cout << "Before continuing, move all sprites you don't wish to change to /unchanged/" << endl;
-        cout << endl << "Press any key to continue." << endl;
+        cout << "Before continuing, move all sprites and sounds you don't wish to change to /unchanged/" << endl;
+        cout << "Press any key to continue." << endl;
         system("pause >nul");
         partTwo(pfileName);
+        cout << endl << "For help, check the README for information on editing the audio and visuals." << endl;
         break;
     case 3:
+        cout << "Before continuing, ensure all sounds you wish to change are in /snd/" << endl;
+        cout << "Press any key to continue." << endl;
+        system("pause >nul");
         partThree(pfileName);
         break;
     case 4:
