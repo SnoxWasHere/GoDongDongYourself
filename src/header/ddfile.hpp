@@ -25,134 +25,58 @@ public:
 };
 
 
+/***********************************************************************************/
+/***********************************************************************************/
+
 
 class DDInfo : public DDFile<util::hRen&, util::iRen>
 {
 protected:
-    void writeHeader(int count) override {
-        const uint16_t mWord = 0x10DD;
-        _file.write(reinterpret_cast<const char*>(&mWord), 2);
-        _file.write(charptr(&count), 2);
-    }
+    void writeHeader(int count) override;
 public:
     //read
     DDInfo(std::string d, std::string n) :        DDFile(d, n) {_file.open(_dir + _name, std::ios::in  | std::ios::binary);}
     //write
     DDInfo(std::string d, std::string n, int c) : DDFile(d, n) {_file.open(_dir + _name, std::ios::out | std::ios::binary); writeHeader(c);}
 
-    void write(util::hRen &container) override {
-        _file.write(charptr(&container.ofs), 4);
-        _file.write(charptr(&container.w), 2);
-        _file.write(charptr(&container.h), 2);
-    }
-
-    std::vector<util::iRen> read() override 
-    {
-        std::vector<util::iRen> output;
-        _file.seekg(2); //magic word
-        uint16_t numImg = 0;
-        _file.read(charptr(&numImg), 2);
-
-        util::iRen img;
-        for (uint16_t i = 0; i < numImg; i++)
-        {
-            //removing directories from this because not always
-            util::iRen img;
-            memset(&img, 0, sizeof(util::iRen));
-            _file.read(charptr(&img), 8);
-            //reading to a struct of different types of ints is difficult so this is the solution
-            //check if this is still necessary now that switched to fstream
-            img.ofs = (img.ofsa) | (img.ofsb << 16); 
-            img.num = i;
-            output.push_back(img);
-        }
-        return output; 
-    }
-    
+    void write(util::hRen &container) override;
+    std::vector<util::iRen> read() override; 
 };
+
+
+/***********************************************************************************/
+/***********************************************************************************/
+
 
 class DDGrid : public DDFile<util::mRen&, util::mRen>
 {
 protected:
-void writeHeader(int count) override {
-        const uint16_t mWord = 0x60DD;
-        _file.write(reinterpret_cast<const char*>(&mWord), 2);
-        _file.write(charptr(&count), 2);
-    }
+void writeHeader(int count) override;
 public:
     //read
     DDGrid(std::string d, std::string n) :        DDFile(d, n) {_file.open(_dir + _name, std::ios::in  | std::ios::binary);}
     //write
     DDGrid(std::string d, std::string n, int c) : DDFile(d, n) {_file.open(_dir + _name, std::ios::out | std::ios::binary); writeHeader(c);}
-    void write(util::mRen &container) override {
-        _file.put(container.num);
-        _file.put(container.w);
-        _file.put(container.h);
-        _file.put(container.count);
-        for(auto img : container.imgs) {_file.write(charptr(&img), 2);}
-    }
-    std::vector<util::mRen> read() {
-        std::vector<util::mRen> output;
-        _file.seekg(2); //magic word
-        uint16_t numGrids = 0;
-        _file.read(charptr(&numGrids), 2);
-
-        for (uint16_t i = 0; i < numGrids; i++)
-        {
-            //header
-            util::mRen mts;
-            memset(&mts, 0, sizeof(util::mRen));
-            _file.read(charptr(&mts), 4);
-
-            //img numbers
-            uint16_t inum = 0;
-            for (uint8_t i = 0; i < mts.count; i++)
-            {
-                _file.read(charptr(&inum), 2);
-                mts.imgs[i] = inum;
-            }
-            output.push_back(mts);
-        }
-        return output;
-    }
+    void write(util::mRen &container) override;
+    std::vector<util::mRen> read() override;
 };
+
+
+/***********************************************************************************/
+/***********************************************************************************/
+
 
 class DDSound : public DDFile<std::pair<uint32_t, uint32_t>, std::pair<uint32_t, uint32_t>>
 {
 protected:
-    void writeHeader(int count) override {
-            if(!_file.is_open()) {std::cout << "help";}
-            const uint16_t mWord = 0x50DD;
-            _file.write(reinterpret_cast<const char*>(&mWord), 2);
-            _file.write(charptr(&count), 2);
-            _file.flush();
-    }
+    void writeHeader(int count) override;
 public:
     //read
     DDSound(std::string d, std::string n) :        DDFile(d, n) {_file.open(_dir + _name, std::ios::in  | std::ios::binary);}
     //write
     DDSound(std::string d, std::string n, int c) : DDFile(d, n) {_file.open(_dir + _name, std::ios::out | std::ios::binary); writeHeader(c);}
-    void write(std::pair<uint32_t, uint32_t> val) override {
-        //this ampersand costed like half an hour
-        _file.write(charptr(&val.first), 4);  //size
-        _file.write(charptr(&val.second), 4); //ofs
-    }
-    std::vector<std::pair<uint32_t, uint32_t>> read() {
-        std::vector<std::pair<uint32_t, uint32_t>> output;
-        _file.seekg(2); //magic word
-        uint16_t numSounds = 0;
-        _file.read(charptr(&numSounds), 2);
-
-        for (uint16_t i = 0; i < numSounds; i++) {
-            uint32_t sSize = 0;
-            _file.read(charptr(&sSize), 4);
-            uint32_t sOfs = 0;
-            _file.read(charptr(&sOfs), 4);
-
-            output.push_back(std::pair<uint32_t, uint32_t>(sSize, sOfs));
-        }
-        return output;
-    }
+    void write(std::pair<uint32_t, uint32_t> val) override;
+    std::vector<std::pair<uint32_t, uint32_t>> read() override;
 };
 
 #endif
