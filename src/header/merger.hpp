@@ -31,10 +31,8 @@ public:
     void run();
 };
 
-
 /***********************************************************************************/
 /***********************************************************************************/
-
 
 class ImageMerger : public Merger<util::iRen>
 {
@@ -47,3 +45,14 @@ public:
 };
 
 #endif
+
+/***********************************************************************************/
+/***********************************************************************************/
+
+class SoundMerger : public Merger<util::sRen>
+{
+protected:
+    void changedCopy() override;
+public:
+    SoundMerger(std::ifstream* p, std::ofstream* m, std::vector<util::iRen>* l, std::vector<uint8_t>* c) : Merger(p,m,l,c) {}
+}
