@@ -56,6 +56,11 @@ namespace util
         uint8_t count;
         uint16_t imgs[16];
     };
+    struct sRen
+    {
+        uint32_t ofs;
+        sRen(uint32_t o) : ofs(o) {}
+    }
     inline int getLength(std::ifstream &f, int pos = 0) {
         f.seekg (0, f.end);
         int flen = f.tellg();
