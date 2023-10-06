@@ -47,12 +47,13 @@ public:
 #endif
 
 /***********************************************************************************/
-/***********************************************************************************/
+/**************************************s*********************************************/
 
 class SoundMerger : public Merger<util::sRen>
 {
 protected:
     void changedCopy() override;
 public:
+    static std::string dir; 
     SoundMerger(std::ifstream* p, std::ofstream* m, std::vector<util::iRen>* l, std::vector<uint8_t>* c) : Merger(p,m,l,c) {}
 }
