@@ -153,7 +153,7 @@ void SoundMerger::changedCopy(){
     //fill with neutral sound value
     memset(buffer, 128, sizzle);
     wav.read(buffer, std::min(ddlength, sizzle));
-    modded->write(buffer, std::min(ddlength, sizzle));
+    modded->write(buffer, sizzle);
     delete[] buffer;
     //jump ahead by normal image size
     player->seekg(sizzle, std::ios::cur);
