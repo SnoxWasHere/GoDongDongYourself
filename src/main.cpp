@@ -191,7 +191,7 @@ void partFour(string pfile)
     string wDir = string("./") + pfile + "/";
     string tDir = wDir + "new/";
     
-    vector<uint8_t> changed; //don't want bool vec
+    vector<uint8_t> ichanged; //don't want bool vec
 
     //open ddi
     DDInfo *ddi = new DDInfo(wDir, "full.ddi");
@@ -200,9 +200,9 @@ void partFour(string pfile)
     //remove ones moved to unchanged
     for (int ij = 0; ij < dlst.size(); ij++) {
         if (fs::exists(tDir + std::to_string(ij) + "e.idx")) {
-            changed.push_back(1); //check if changed
+            ichanged.push_back(1); //check if changed
         } else {
-            changed.push_back(0);
+            ichanged.push_back(0);
         }
     }
     delete ddi;
@@ -230,30 +230,28 @@ void partFour(string pfile)
 
     ImageMerger::dir = tDir;
     //pointer circumvents PlayerFile privacy
-    ImageMerger merger(&player._playerFile, &modded, &dlst, &changed);
+    ImageMerger imerger(&player._playerFile, &modded, &dlst, &ichanged);
     //goes through each member of dlst and transfers the images
-    merger.run();
+    imerger.run();
 
     //sound time!
-    // string sDir = wDir + "snd/";
-    // DDSound dds(sDir, "full.dds");
-    // vector<pair<uint32_t, uint32_t>> sounds = dds.read();
-    // vector<uint8_t> sChanged;
-    // for (int ij = 0; ij < sounds.size(); ij++) {
-    //     if (fs::exists(sDir + std::to_string(ij) + ".wav")) {
-    //         sChanged.push_back(1); //check if changed
-    //     } else {
-    //         sChanged.push_back(0);
-    //     }
-    // }
-    //
-    // unsigned pToSound = sounds[0].second - player.getPosition();
-    // //copy everything between where we are now and the first sound
-    // buffer = new char[pToSound];
-    // memset(buffer, 0, pToSound);
-    // player._playerFile.read(buffer, pToSound);
-    // modded.write(buffer, pToSound);
-    // delete[] buffer;
+    string sDir = wDir + "snd/";
+    DDSound dds(sDir, "full.dds");
+    vector<util::sRen> sounds = dds.read();
+    vector<uint8_t> schanged;
+    for (int ij = 0; ij < sounds.size(); ij++) {
+        if (fs::exists(sDir + std::to_string(ij) + ".wav")) {
+            schanged.push_back(1); //check if changed
+        } else {
+            schanged.push_back(0);
+        }
+    }
+    
+    SoundMerger::dir = sDir;
+    SoundMerger smerger(&player._playerFile, &modded, &sounds, &schanged);
+    //same as before but with 42 byte headers and fixed size constraints
+    smerger.run();
+
     //copy everything else
     unsigned pRemainder = pLen - player.getPosition();
     buffer = new char[pRemainder];

@@ -1,6 +1,6 @@
 #include "header/merger.hpp"
 
-template <typename T> void Merger<T>::skipToNext()
+template <typename T, unsigned int S> void Merger<T,S>::skipToNext()
 {
     //skip over blank space in player file
     //copy whats there just incase, although probably just 0
@@ -14,17 +14,16 @@ template <typename T> void Merger<T>::skipToNext()
     delete[] buffer;
 }
 
-template <typename T> void Merger<T>::unchangedCopy()
+template <typename T, unsigned int S> void Merger<T,S>::unchangedCopy()
 {
     if (_count + 1 < list->size()) //overflow protection
     {
         //dist between where we are now and where the next header is
-        //TODO technically could be optimized to go to next changed
-        uint32_t highwater = list->at(_count + 1).ofs - list->at(_count).ofs - 20;
+        uint32_t highwater = list->at(_count + 1).ofs - list->at(_count).ofs - S;
+        //come hell and highwater
         char* buffer = new char[highwater];
         memset(buffer, 0, highwater);
         player->read(buffer, highwater);
-        
         modded->write(buffer, highwater);
         delete[] buffer;
     }
@@ -32,7 +31,7 @@ template <typename T> void Merger<T>::unchangedCopy()
     status->update(_count);
 }
 
-template <typename T> void Merger<T>::run()
+template <typename T, unsigned int S> void Merger<T,S>::run()
 {
     status = new util::Status("Writing images", list->size());
     while (this->_count < list->size())
@@ -41,26 +40,27 @@ template <typename T> void Merger<T>::run()
             this->skipToNext(); //skip to next header
         }
         else {
-            headerBuffer = new char[20];
-            memset(headerBuffer, 0, 20);
-            player->read(headerBuffer, 20);
+            headerbuf = new char[S];
+            memset(headerbuf, 0, S);
+            player->read(headerbuf, S);
 
-            if (util::isEmpty(headerBuffer, 20)) {modded->write(blankbuf, 20);}
+            if (util::isEmpty(headerbuf, S)) {modded->write(blankbuf, S);}
             else {
                 if (changed->at(_count) == 1) {
                     //implement changed header case-by-case
                     this->changedCopy(); //copy from .idx
                 }
                 else { //unchanged
-                    modded->write(headerBuffer, 20);
+                    modded->write(headerbuf, S);
                     this->unchangedCopy(); //copy from .player
                 }
             }
-            delete[] headerBuffer;
+            delete[] headerbuf;
         }
     }
     modded->flush();
     delete status;
+    delete[] blankbuf;
 }
 
 /***********************************************************************************/
@@ -86,12 +86,12 @@ void ImageMerger::changedCopy()
 
     //set size equal to 0
     //this allows us to write the uncompressed data 1:1 without trouble 
-    modded->write(headerBuffer, 16);
+    modded->write(headerbuf, 16);
     modded->write(blankbuf, 4);
 
-    uint32_t sizzle = getSize(headerBuffer);
+    uint32_t sizzle = getSize(headerbuf);
 
-    if (headerBuffer[12] != 0) //checking for palette
+    if (headerbuf[12] != 0) //checking for palette
     {
         std::ifstream prga ((dir + std::to_string(list->at(_count).num) + "p.RGBA").c_str(), std::ios::binary);
         int prglength = util::getLength(prga);
@@ -130,4 +130,35 @@ void ImageMerger::changedCopy()
     _count++;
     status->update(_count);
     idx.close();
+}
+
+
+/***********************************************************************************/
+/***********************************************************************************/
+
+std::string SoundMerger::dir = "";
+
+void SoundMerger::changedCopy(){
+    std::ifstream wav ((dir + std::to_string(list->at(_count).num) + ".wav").c_str(), std::ios::binary);
+    uint32_t ddlength = util::getLength(wav);
+
+    //copy whole header
+    modded->write(headerbuf, 42);
+
+    //it's unclear if i can exceed this size
+    uint32_t sizzle = list->at(_count).size;
+    
+    //copy-paste entire .wav
+    char* buffer = new char[sizzle];
+    //fill with neutral sound value
+    memset(buffer, 128, sizzle);
+    wav.read(buffer, std::min(ddlength, sizzle));
+    modded->write(buffer, std::min(ddlength, sizzle));
+    delete[] buffer;
+    //jump ahead by normal image size
+    player->seekg(sizzle, std::ios::cur);
+
+    _count++;
+    status->update(_count);
+    wav.close();
 }
