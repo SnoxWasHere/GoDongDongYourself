@@ -91,6 +91,7 @@ void DDSound::writeHeader(int count) {
 
 void DDSound::write(util::sRen val) {
     //this ampersand costed like half an hour
+    _file.write(charptr(&val.num), 2);  //num
     _file.write(charptr(&val.size), 4);  //size
     _file.write(charptr(&val.ofs), 4); //ofs
 }
@@ -103,6 +104,7 @@ std::vector<util::sRen> DDSound::read() {
 
     for (uint16_t i = 0; i < numSounds; i++) {
         util::sRen snd;
+        _file.read(charptr(&snd.num), 2);
         _file.read(charptr(&snd.size), 4);
         _file.read(charptr(&snd.ofs), 4);
 

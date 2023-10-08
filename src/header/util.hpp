@@ -58,6 +58,7 @@ namespace util
     };
     struct sRen
     {
+        uint16_t num;
         uint32_t size;
         uint32_t ofs;
     };
