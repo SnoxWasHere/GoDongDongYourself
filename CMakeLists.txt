@@ -6,7 +6,6 @@ add_compile_options(-Wno-narrowing)
 add_compile_options(-Wno-c++20-extensions)
 add_compile_options(-std=c++20)
 
-
 include_directories(src/header)
 
 file(GLOB SOURCES "src/*.cpp")
