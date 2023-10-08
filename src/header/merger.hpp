@@ -28,7 +28,7 @@ public:
         this->blankbuf = new char[20];
         memset(this->blankbuf, 0, 20);
     }
-    void run();
+    virtual void run();
 };
 
 /***********************************************************************************/
