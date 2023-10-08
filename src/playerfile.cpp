@@ -268,7 +268,8 @@ void PlayerFile::createSounds()
         uint32_t sPos = _playerFile.tellg();
         memset(&qqww, 0, sizeof(qqww));
         _playerFile.read(charptr(&qqww), 0x2A);
-        dds->write(std::pair<uint32_t, uint32_t>(qqww.size, sPos));
+        util::sRen sound = {ij, qqww.size, sPos};
+        dds->write(sound);
         if(qqww.size != 0)
         {
             uint8_t* snd_m = new uint8_t[qqww.size];
