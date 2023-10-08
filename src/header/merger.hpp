@@ -3,7 +3,7 @@
 #include "util.hpp"
 #include "playerfile.hpp"
 
-template <typename T> class Merger
+template <typename T, unsigned int S> class Merger
 {
 protected:
     unsigned _count = 0;
@@ -13,8 +13,8 @@ protected:
     std::vector<T>* list; 
     std::vector<uint8_t>* changed;
     util::Status* status;
-    char* blankbuf;
-    char* headerBuffer;
+    char* blankbuf; //please no memory leaks
+    char* headerbuf; //you too
     void skipToNext();
     virtual void changedCopy() {}
     void unchangedCopy();
@@ -34,7 +34,7 @@ public:
 /***********************************************************************************/
 /***********************************************************************************/
 
-class ImageMerger : public Merger<util::iRen>
+class ImageMerger : public Merger<util::iRen, 20>
 {
 protected:
     void changedCopy() override;
@@ -47,13 +47,13 @@ public:
 #endif
 
 /***********************************************************************************/
-/**************************************s*********************************************/
+/***********************************************************************************/
 
-class SoundMerger : public Merger<util::sRen>
+class SoundMerger : public Merger<util::sRen, 42>
 {
 protected:
     void changedCopy() override;
 public:
     static std::string dir; 
-    SoundMerger(std::ifstream* p, std::ofstream* m, std::vector<util::iRen>* l, std::vector<uint8_t>* c) : Merger(p,m,l,c) {}
-}
+    SoundMerger(std::ifstream* p, std::ofstream* m, std::vector<util::sRen>* l, std::vector<uint8_t>* c) : Merger(p,m,l,c) {}
+};
