@@ -89,25 +89,24 @@ void DDSound::writeHeader(int count) {
     _file.flush();
 }
 
-void DDSound::write(std::pair<uint32_t, uint32_t> val) {
+void DDSound::write(util::sRen val) {
     //this ampersand costed like half an hour
-    _file.write(charptr(&val.first), 4);  //size
-    _file.write(charptr(&val.second), 4); //ofs
+    _file.write(charptr(&val.size), 4);  //size
+    _file.write(charptr(&val.ofs), 4); //ofs
 }
 
-std::vector<std::pair<uint32_t, uint32_t>> DDSound::read() {
-    std::vector<std::pair<uint32_t, uint32_t>> output;
+std::vector<util::sRen> DDSound::read() {
+    std::vector<util::sRen> output;
     _file.seekg(2); //magic word
     uint16_t numSounds = 0;
     _file.read(charptr(&numSounds), 2);
 
     for (uint16_t i = 0; i < numSounds; i++) {
-        uint32_t sSize = 0;
-        _file.read(charptr(&sSize), 4);
-        uint32_t sOfs = 0;
-        _file.read(charptr(&sOfs), 4);
+        util::sRen snd;
+        _file.read(charptr(&snd.size), 4);
+        _file.read(charptr(&snd.ofs), 4);
 
-        output.push_back(std::pair<uint32_t, uint32_t>(sSize, sOfs));
+        output.push_back(snd);
     }
     return output;
 }

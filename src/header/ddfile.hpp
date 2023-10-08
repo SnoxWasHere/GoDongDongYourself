@@ -66,7 +66,7 @@ public:
 /***********************************************************************************/
 
 
-class DDSound : public DDFile<std::pair<uint32_t, uint32_t>, std::pair<uint32_t, uint32_t>>
+class DDSound : public DDFile<util::sRen, util::sRen>
 {
 protected:
     void writeHeader(int count) override;
@@ -75,8 +75,8 @@ public:
     DDSound(std::string d, std::string n) :        DDFile(d, n) {_file.open(_dir + _name, std::ios::in  | std::ios::binary);}
     //write
     DDSound(std::string d, std::string n, int c) : DDFile(d, n) {_file.open(_dir + _name, std::ios::out | std::ios::binary); writeHeader(c);}
-    void write(std::pair<uint32_t, uint32_t> val) override;
-    std::vector<std::pair<uint32_t, uint32_t>> read() override;
+    void write(util::sRen val) override;
+    std::vector<util::sRen> read() override;
 };
 
 #endif
